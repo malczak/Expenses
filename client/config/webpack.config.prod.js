@@ -7,8 +7,7 @@ const merge = require('webpack-merge');
 const autoprefixer = require('autoprefixer');
 
 // Webpack Plugins
-const CleanWebpackPlugin = require('clean-webpack-plugin');
-const UglifyJsWebpackPlugin = require('uglifyjs-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
@@ -50,11 +49,6 @@ module.exports = function(commonConfig, opts = {}) {
                 }
             },
             minimizer: [
-                new UglifyJsWebpackPlugin({
-                    cache: true,
-                    parallel: true,
-                    sourceMap: true
-                }),
                 new OptimizeCSSAssetsPlugin({
                     cssProcessorOptions: {
                         preset: [
@@ -77,13 +71,13 @@ module.exports = function(commonConfig, opts = {}) {
         plugins: [
             new webpack.NamedModulesPlugin(),
             new webpack.NamedChunksPlugin(),
-            new CleanWebpackPlugin([path.resolve(__dirname, `env-${stage}`)]),
+            new CleanWebpackPlugin({ root: process.cwd() }),
             new webpack.NoEmitOnErrorsPlugin(),
             new webpack.optimize.ModuleConcatenationPlugin(),
             new webpack.EnvironmentPlugin({ APP_STAGE: 'production' })
         ],
         output: {
-            path: path.resolve(__dirname, `env-${stage}`),
+            path: path.resolve(paths.appBuild, `env-${stage}`),
             filename: '[name].[chunkhash].js'
         }
     });

@@ -47,6 +47,8 @@ const endpoints = {
     }
 };
 
+const commonConfig = {};
+
 const babelLoader = {
     loader: 'babel-loader',
     options: {
@@ -79,7 +81,13 @@ module.exports = function(env = {}) {
     const stage = Array.isArray(env.stage) ? env.stage.pop() : env.stage;
     const paths = require('./paths')(stage);
     const stageConfig = endpoints[stage || 'local'];
-    const clientConfig = stageConfig.config || {};
+
+    const clientConfig = Object.assign(
+        commonConfig,
+        stageConfig.config || {},
+        JSON.parse(env.config || '{}')
+    );
+
     const package = require(paths.appPackageJson);
 
     console.log(
@@ -93,8 +101,7 @@ module.exports = function(env = {}) {
         resolve: {
             extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
             alias: {
-                app: paths.appSrc,
-                common: paths.commonSrc
+                app: paths.appSrc
             },
             modules: [paths.appSrc, paths.appNodeModules],
             symlinks: false
