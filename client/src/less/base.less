@@ -1,0 +1,101 @@
+/*** Reset CSS ***/
+* {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    line-height: 1.2em;
+    vertical-align: baseline;
+    text-decoration: none;
+    outline: 0;
+}
+
+html {
+    -webkit-text-size-adjust: none;
+    touch-action: manipulation;
+}
+
+html, body {
+    min-height: 100%;
+    height: 100%;
+}
+
+body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+body.no--scroll {
+    overflow: hidden !important;
+}
+
+body, button, input {
+    font-family: 'Montserrat';
+    font-weight: 200;
+    font-style: normal;
+    color: #444;
+    background: #fff;
+}
+
+button, input {
+    overflow: hidden !important;
+}
+
+
+body input:focus, body input:focus-within,
+body textarea:focus, body textarea:focus-within,
+body select:focus, body select:focus-within  {
+    box-shadow: none !important;
+}
+
+body textarea, body select {
+    border: 1px solid #ececec !important;
+    background: #ffffff !important;
+}
+
+body input, body textarea, body select {
+    border-style: solid;
+    outline: none;
+    -webkit-appearance:none;
+    appearance:none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none !important;
+}
+
+#root {
+    width: 100%;
+    height: 100%;
+}
+
+.screen-view {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: absolute;
+    background: #ffffff;
+}
+
+.circle-icon-button {
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+    width: 64px;
+    height: 64px;
+    border-radius: 32px;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+    transition: transform 0.2s;
+    &:hover {
+        background: lighten(#76abe9, 25%);
+    }
+    &:active {
+        background: lighten(#76abe9, 20%);
+        transform: scale(0.9, 0.9);
+    }
+}

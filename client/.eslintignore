@@ -1,0 +1,6 @@
+**/*.ejs
+**/*.json
+
+build/
+node_modules/
+.git/

@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "jsx": "react",
+    "experimentalDecorators": true,
+    "outDir": "./built",
+    "allowJs": true,
+    "target": "es6",
+    "baseUrl": ".",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "alwaysStrict": true,
+    "typeRoots": ["./node_modules/@types", "./@types"],
+    "resolveJsonModule": true,
+    "strict": true,
+    "strictNullChecks": false,
+    "paths": {
+      "app/*": ["./src/*"],
+      "cents": ["./@types/cents"]
+    }
+  },
+  "include": ["./src/**/*"]
+}

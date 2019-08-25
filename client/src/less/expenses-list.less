@@ -1,0 +1,95 @@
+.expenses-list {
+    flex-direction: column;
+    overflow: hidden;
+
+    &.expenses-list--empty {
+        align-items:center;
+        justify-content: center;
+    }
+
+    & .expenses-list__date {
+        font-size: 1.4rem;
+        padding: 0.5em;
+        text-align: center;
+    }
+
+    & .expenses-list__content {
+        flex-grow: 1;
+        overflow-y: scroll;
+        padding-bottom: 64px;
+    }
+
+    & .expenses-list__item {
+        padding: 0.75em;
+        border-bottom: 1px solid #efefef;
+    }
+
+    & .expense-item__content {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        font-size: 1.2rem;
+        margin: 0.5em 0;
+    }
+
+    & .expense-item__header {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    & .expense-item__footer{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        font-weight: 0.8em;
+    }
+
+    & .expense-item__time {
+        flex-grow: 1;
+        font-size: 0.8em;
+    }
+
+    & .expenses-summary {
+        padding: 1em 0.5em;
+        border-top: 1px solid #efefef;
+    }
+
+    & .expenses-summary__amount {
+        font-size: 1.1em;
+        font-weight: 400;
+        margin: 0 0.2em;
+    }
+
+    & .expense-item__category {
+        display: flex;
+        flex-grow: 1;
+        flex-direction: row;
+        align-items: baseline;
+        font-size: initial;
+        margin: 0 0.3em;
+        > span {
+            width: 12px;
+            height: 12px;
+            margin-right: 0.2em;
+        }
+        > small {
+            flex-grow: 1;
+        }
+    }
+
+    & .expense-item__desc {
+        margin: 0 0.5em;
+    }
+
+    & .expense-item__user {
+        margin: 0 0.5em;
+    }
+
+
+    & .expense-item__amount {
+        flex-grow: 1;
+        font-size: 1.4em;
+        text-align: right;
+    }
+}
