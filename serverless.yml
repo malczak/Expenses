@@ -1,0 +1,356 @@
+# ##
+#
+#           💵💵💵
+#
+#          Expenses
+#
+#       with Serverless
+#
+# ##
+
+service: Expenses
+
+plugins:
+    localPath: "./serverless_plugins"
+    modules:
+        - output-plugin
+        - client-deploy
+
+custom:
+    api:
+        name: Expenses
+
+provider:
+    name: aws
+    runtime: nodejs8.10
+    variableSyntax: "\\${{([ ~:a-zA-Z0-9._@\\'\",\\-\\/\\(\\)]+?)}}" # notice the double quotes for yaml to ignore the escape characters!
+    stage: ${{opt:stage,'dev'}}
+    region: ${{opt:region, 'us-east-1'}}
+    uid: ${{file(./serverless_plugins/utils.js):generateUID}}
+    versionFunctions: false
+
+package:
+    individually: true
+    exclude:
+        - "**/*"
+
+# CloudFormation architecture
+resources:
+    Resources:
+        S3Bucket:
+            Type: AWS::S3::Bucket
+            Properties:
+                AccessControl: "Private"
+                WebsiteConfiguration:
+                    IndexDocument: "index.html"
+                    ErrorDocument: "index.html"
+
+        IAMUser:
+            Type: AWS::IAM::User
+            DependsOn: S3Bucket
+            Properties:
+                Policies:
+                    - PolicyName: DynamoDBAppSyncAccess
+                      PolicyDocument:
+                          Version: "2012-10-17"
+                          Statement:
+                              - Effect: "Allow"
+                                Action:
+                                    - "dynamodb:BatchGetItem"
+                                    - "dynamodb:BatchWriteItem"
+                                    - "dynamodb:PutItem"
+                                    - "dynamodb:DeleteItem"
+                                    - "dynamodb:GetItem"
+                                    - "dynamodb:Scan"
+                                    - "dynamodb:Query"
+                                    - "dynamodb:UpdateItem"
+                                Resource:
+                                    - !GetAtt DynamoDBTable.Arn
+                                    - !Join
+                                      - ""
+                                      - - !GetAtt DynamoDBTable.Arn
+                                        - "/index/*"
+                                    - !Join
+                                      - ""
+                                      - - !GetAtt DynamoDBTable.Arn
+                                        - "/*"
+
+                    - PolicyName: AppSyncAccess
+                      PolicyDocument:
+                          Version: "2012-10-17"
+                          Statement:
+                              - Effect: "Allow"
+                                Action:
+                                    - "appsync:*"
+                                Resource: !Join
+                                    - ""
+                                    - - !GetAtt AppSyncApi.Arn
+                                      - "/*"
+
+        IAMUserKey:
+            Type: AWS::IAM::AccessKey
+            DependsOn: IAMUser
+            Properties:
+                UserName: !Ref IAMUser
+
+        RoleLambdaExecution:
+            Type: "AWS::IAM::Role"
+            Properties:
+                AssumeRolePolicyDocument:
+                    Version: "2012-10-17"
+                    Statement:
+                        - Effect: "Allow"
+                          Principal:
+                              Service:
+                                  - appsync.amazonaws.com
+                                  - lambda.amazonaws.com
+                                  - edgelambda.amazonaws.com
+                          Action:
+                              - "sts:AssumeRole"
+                Path: /
+                Policies:
+                    - PolicyName: logsAccess
+                      PolicyDocument:
+                          Version: "2012-10-17"
+                          Statement:
+                              - Effect: "Allow"
+                                Action:
+                                    - "logs:*"
+                                Resource: "arn:aws:logs:*:*:*"
+
+        AppSyncApi:
+            Type: "AWS::AppSync::GraphQLApi"
+            DependsOn: S3Bucket
+            Properties:
+                AuthenticationType: "AWS_IAM"
+                Name: ${{self:custom.api.name}}
+
+        AppSyncSchema:
+            Type: "AWS::AppSync::GraphQLSchema"
+            Properties:
+                ApiId: !GetAtt AppSyncApi.ApiId
+                Definition: |
+                    input CreateExpenseInput {
+                        user: String!
+                        amount: Int!
+                        date: Int
+                        description: String
+                        categories: [String!]
+                    }
+
+                    type Expense {
+                        id: ID!
+                        user: String!
+                        date: Int!
+                        amount: Int!
+                        description: String
+                        categories: [String!]
+                    }
+
+                    type Mutation {
+                        createExpense(input: CreateExpenseInput!): Expense
+                        updateExpense(id: ID!, input: UpdateExpenseInput!): Expense
+                    }
+
+                    type Query {
+                        getExpense(id: ID!): Expense
+                        getTodayExpenses: [Expense]
+                        getExpenses(since: Int!, to: Int!): [Expense]
+                        getUserExpenses(user: String!, date: String): [Expense]
+                    }
+
+                    input UpdateExpenseInput {
+                        user: String
+                        date: Int
+                        amount: Int
+                        description: String
+                        categories: [String!]
+                    }
+
+                    schema {
+                        query: Query
+                        mutation: Mutation
+                    }
+
+        DynamoDBTable:
+            Type: "AWS::DynamoDB::Table"
+            Properties:
+                TableName: "Expenses_${{self:provider.stage}}_${{self:provider.uid}}"
+                BillingMode: "PAY_PER_REQUEST"
+                AttributeDefinitions:
+                    - AttributeName: "id"
+                      AttributeType: "S"
+                    - AttributeName: "user"
+                      AttributeType: "S"
+                    - AttributeName: "date"
+                      AttributeType: "N"
+                KeySchema:
+                    - AttributeName: "id"
+                      KeyType: "HASH"
+                GlobalSecondaryIndexes:
+                    - IndexName: "id-date-index"
+                      KeySchema:
+                          - AttributeName: "id"
+                            KeyType: "HASH"
+                          - AttributeName: "date"
+                            KeyType: "RANGE"
+                      Projection:
+                          ProjectionType: "ALL"
+                    - IndexName: "user-date-index"
+                      KeySchema:
+                          - AttributeName: "user"
+                            KeyType: "HASH"
+                          - AttributeName: "date"
+                            KeyType: "RANGE"
+                      Projection:
+                          ProjectionType: "ALL"
+
+        DynamoDBService:
+            Type: "AWS::IAM::Role"
+            Properties:
+                AssumeRolePolicyDocument:
+                    Version: "2012-10-17"
+                    Statement:
+                        - Effect: "Allow"
+                          Principal:
+                              Service:
+                                  - appsync.amazonaws.com
+                          Action:
+                              - "sts:AssumeRole"
+                Path: /
+                Policies:
+                    - PolicyName: DynamoDB
+                      PolicyDocument:
+                          Version: "2012-10-17"
+                          Statement:
+                              - Effect: "Allow"
+                                Action:
+                                    - "dynamodb:*"
+                                Resource: !GetAtt DynamoDBTable.Arn
+
+        AppSyncDataSource:
+            Type: "AWS::AppSync::DataSource"
+            DependsOn: AppSyncSchema
+            Properties:
+                ApiId: !GetAtt AppSyncApi.ApiId
+                Name: ExpensesDataSource
+                Description: "AppSync Data Source for Expenses"
+                Type: AMAZON_DYNAMODB
+                ServiceRoleArn: !GetAtt DynamoDBService.Arn
+                DynamoDBConfig:
+                    AwsRegion: ${{self:provider.region}}
+                    TableName: !Ref DynamoDBTable
+                    UseCallerCredentials: True
+
+        # Query resolvers
+        AppSyncQueryResolverGetTodayExpenses:
+            Type: "AWS::AppSync::Resolver"
+            DependsOn: AppSyncDataSource
+            Properties:
+                ApiId: !GetAtt AppSyncApi.ApiId
+                TypeName: Query
+                FieldName: getTodayExpenses
+                DataSourceName: !GetAtt AppSyncDataSource.Name
+                RequestMappingTemplate: |
+                    {
+                        #set( $today = $util.time.nowISO8601().substring(0, 10) )
+                        #set( $minDate = $util.time.epochMilliSecondsToSeconds($util.time.parseISO8601ToEpochMilliSeconds("${today}T00:00:00.0Z")) )
+                        #set( $maxDate = $util.time.epochMilliSecondsToSeconds($util.time.parseISO8601ToEpochMilliSeconds("${today}T23:59:59.9Z")) )
+                        "version" : "2017-02-28",
+                        "operation" : "Scan",
+                        "filter" : {
+                            "expression": "#date BETWEEN :min AND :max",
+                            "expressionNames": {
+                                "#date": "date"
+                            },
+                            "expressionValues" : {
+                                ":min": $util.dynamodb.toNumberJson($minDate),
+                                ":max": $util.dynamodb.toNumberJson($maxDate),
+                            }
+                        }
+                    }
+                ResponseMappingTemplate: "$util.toJson($ctx.result.items)"
+
+        # Mutation resolvers
+        AppSyncMutateResolverCreateExpense:
+            Type: "AWS::AppSync::Resolver"
+            DependsOn: AppSyncDataSource
+            Properties:
+                ApiId: !GetAtt AppSyncApi.ApiId
+                TypeName: Mutation
+                FieldName: createExpense
+                DataSourceName: !GetAtt AppSyncDataSource.Name
+                RequestMappingTemplate: |
+                    {
+                        #set( $input = $context.arguments.input)
+
+                        #set( $attribs = {
+                            "user": $util.dynamodb.toString($input.user),
+                            "amount": $util.dynamodb.toNumber($input.amount)
+                        })
+
+                        ## If date not set use current time
+                        #if( !$input.date )
+                            #set( $date = $util.time.nowEpochSeconds() )
+                        #else
+                            #set( $date = $input.date )
+                        #end
+
+                        $!{attribs.put("date", $util.dynamodb.toNumber($date))}
+
+                        ## Add description if it exists
+                        #if( $input.description )
+                            $!{attribs.put("description", $util.dynamodb.toString($input.description))}
+                        #end
+
+                        ## Just in case check categories for any non string items
+                        #if( ($input.categories) && ($util.isList($input.categories))  )
+                            #set( $categories = [] )
+                            #foreach( $category in $input.categories )
+                                #if ($util.isString($category))
+                                    $util.qr($categories.add($category))
+                                #end
+                            #end
+                            #if (!$categories.isEmpty())
+                                $!{attribs.put("categories", $util.dynamodb.toStringSet($categories))}
+                            #end
+                        #end
+
+
+                        "version" : "2017-02-28",
+                        "operation" : "PutItem",
+                        "key" : {
+                            "id": $util.dynamodb.toStringJson($util.autoId()),
+                        },
+                        "attributeValues" : $utils.toJson($attribs)
+                    }
+                ResponseMappingTemplate: "$util.toJson($ctx.result)"
+
+    Outputs:
+        Bucket:
+            Description: The application bucket
+            Value: !Ref S3Bucket
+
+        User:
+            Description: The dedicated AppSync user
+            Value: !Ref IAMUser
+
+        AccessKeyId:
+            Description: The user access key
+            Value: !Ref IAMUserKey
+
+        SecretAccessKey:
+            Description: The user access secret
+            Value: !GetAtt IAMUserKey.SecretAccessKey
+
+        ApiEndpoint:
+            Description: The URL to the GraphQL Endpoint
+            Value: !GetAtt AppSyncApi.GraphQLUrl
+
+        ApiId:
+            Description: The API ID of the GraphQL API
+            Value: !GetAtt AppSyncApi.ApiId
+
+        ClientUrl:
+            Description: Client application url
+            Value: !GetAtt S3Bucket.WebsiteURL
