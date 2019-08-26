@@ -21,13 +21,14 @@ class ClientPlugin {
 
     this.hooks = {
       "after:deploy:deploy": this.process.bind(this)
-      "before:remove:remove": this.remove.bind(this);
+      //   "before:remove:remove": this.remove.bind(this);
     };
   }
 
-  async remove() {
-    // cleanup bucket
-  }
+  //   async remove() {
+  // cleanup bucket
+  // #SEE https://github.com/sinofseven/serverless-s3-remover/blob/master/index.js
+  //   }
 
   async process() {
     const stage = this.provider.getStage();

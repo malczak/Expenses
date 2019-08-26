@@ -271,6 +271,31 @@ resources:
                     }
                 ResponseMappingTemplate: "$util.toJson($ctx.result.items)"
 
+        AppSyncQueryResolverGetExpenses:
+            Type: "AWS::AppSync::Resolver"
+            DependsOn: AppSyncDataSource
+            Properties:
+                ApiId: !GetAtt AppSyncApi.ApiId
+                TypeName: Query
+                FieldName: getExpenses
+                DataSourceName: !GetAtt AppSyncDataSource.Name
+                RequestMappingTemplate: |
+                    {
+                        "version" : "2017-02-28",
+                        "operation" : "Scan",
+                        "filter" : {
+                            "expression": "#date BETWEEN :min AND :max",
+                            "expressionNames": {
+                                "#date": "date"
+                            },
+                            "expressionValues" : {
+                                ":min": $util.dynamodb.toNumberJson($context.args.since),
+                                ":max": $util.dynamodb.toNumberJson($context.args.to)
+                            }
+                        }
+                    }
+                ResponseMappingTemplate: "$util.toJson($ctx.result.items)"
+
         # Mutation resolvers
         AppSyncMutateResolverCreateExpense:
             Type: "AWS::AppSync::Resolver"

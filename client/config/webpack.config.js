@@ -180,6 +180,12 @@ module.exports = function(env = {}) {
             tls: 'empty'
         },
         plugins: [
+            new CopyWebpackPlugin([
+                {
+                    from: path.resolve(paths.appPublic, '*.*'),
+                    to: path.resolve(paths.appBuild, `env-${stage}`)
+                }
+            ]),
             new HtmlWebpackPlugin({
                 template: paths.appHtml,
                 inject: true

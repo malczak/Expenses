@@ -36,7 +36,7 @@ export class CreateExpenseView extends React.PureComponent<
             className="navigation-bar__back"
             onClick={() => this.props.onCancel()}
           >
-            <ChevronLeft /> Back
+            <ChevronLeft /> Anuluj
           </button>
         </div>
         <MoneyPad onCreate={this.onCreate} />

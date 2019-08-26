@@ -4,7 +4,12 @@ import moment from 'moment';
 import { StoreProps } from 'app/stores/AppStore';
 import { inject, observer } from 'mobx-react';
 import { Expense } from 'app/models/Expense';
-import { getIconByName, UploadIcon } from '../components/MoneyPad/icons';
+import {
+  getIconByName,
+  UploadIcon,
+  ChevronLeft,
+  ChevronRight
+} from '../components/MoneyPad/icons';
 import { getCategoryByName } from 'app/data';
 import Money from 'cents';
 
@@ -19,13 +24,20 @@ type ExpenseViewProps = {
   dateFormatter: (date: Date) => string;
 };
 
+type DayExpenses = {
+  id: string;
+  date: Date;
+  total: Money;
+  expenses: Expense[];
+};
+
 class ExpenseView extends React.PureComponent<ExpenseViewProps> {
   render() {
     const { expense, moneyFormatter, dateFormatter } = this.props;
     const category = getCategoryByName(expense.category);
     const Icon = category ? getIconByName(category.icon) : null;
     return (
-      <div className="expenses-list__item" data-id={expense.id}>
+      <div className="expenses-item" data-id={expense.id}>
         <div className="expense-item__header">
           <div className="expense-item__time">
             {dateFormatter(expense.date)}
@@ -60,6 +72,34 @@ class ExpenseView extends React.PureComponent<ExpenseViewProps> {
   }
 }
 
+const DayExpenses: React.FC<{ day: DayExpenses }> = ({ day }) => {
+  return (
+    <div className="expenses-day">
+      <div className="expenses-day__header">
+        {moment(day.date).format('LL')}
+      </div>
+
+      <div className="expenses-day__content">
+        {day.expenses.map(expense => (
+          <ExpenseView
+            key={expense.id}
+            expense={expense}
+            moneyFormatter={moneyFormatter}
+            dateFormatter={timeOnlyFormatter}
+          />
+        ))}
+      </div>
+
+      <div className="expenses-day__summary">
+        Suma:
+        <span className="expenses-day__summary__amount">
+          {moneyFormatter(day.total)}
+        </span>
+      </div>
+    </div>
+  );
+};
+
 type ListExpensesProps = {};
 
 @inject('appStore')
@@ -68,24 +108,66 @@ export class ListExpensesView extends React.Component<
   ListExpensesProps & StoreProps
 > {
   // -----------------------
+  // Handlers
+  // -----------------------
+  gotoPrevDay = () => {
+    const date = moment(this.props.appStore.date)
+      .subtract(1, 'day')
+      .toDate();
+    this.props.appStore.fetchDateExpenses(date);
+  };
+
+  gotoNextDay = () => {
+    const date = moment(this.props.appStore.date)
+      .add(1, 'day')
+      .toDate();
+    this.props.appStore.fetchDateExpenses(date);
+  };
+
+  // -----------------------
   // Methods
   // -----------------------
-  sameDayData() {
+  groupByDay(): DayExpenses[] {
     const expenses = this.props.appStore.expenses;
-    if (!expenses || !expenses.length) return false;
+    if (!expenses || !expenses.length) return [];
 
-    const dateToDay = (date: Date) => moment(date).format('DDMMYY');
-    const commonDate = dateToDay(expenses[0].date);
-    return expenses.every(expense => dateToDay(expense.date) == commonDate);
+    const dayExpensesMap = expenses.reduce((map, expense) => {
+      const expenseDate = moment(expense.date);
+      const dayStr = expenseDate.format('DDMMYY');
+
+      let dayExpenses: DayExpenses = map.get(dayStr);
+      if (!dayExpenses) {
+        dayExpenses = {
+          id: dayStr,
+          date: expenseDate.startOf('day').toDate(),
+          total: Money.cents(0),
+          expenses: []
+        };
+        map.set(dayStr, dayExpenses);
+      }
+
+      dayExpenses.expenses.push(expense);
+      dayExpenses.total = dayExpenses.total.add(expense.amount);
+
+      return map;
+    }, new Map<string, DayExpenses>());
+
+    const dayExpenses = [...dayExpensesMap.values()];
+    return dayExpenses.length > 1
+      ? dayExpenses.sort((a, b) =>
+          a.date.getTime() < b.date.getTime() ? -1 : 1
+        )
+      : dayExpenses;
   }
 
   // -----------------------
   // Render
   // -----------------------
   render() {
-    const expenses = this.props.appStore.expenses;
+    const currentDate = this.props.appStore.date;
+    const groupedExpenses = this.groupByDay();
 
-    if (!expenses.length) {
+    if (!groupedExpenses.length) {
       return (
         <div className="screen-view expenses-list expenses-list--empty">
           <div>No expenses 💸</div>
@@ -93,37 +175,35 @@ export class ListExpensesView extends React.Component<
       );
     }
 
-    const sameDayData = this.sameDayData();
-    const sum = expenses.reduce((sum, expense) => {
-      return sum.add(expense.amount);
-    }, new Money(0));
+    const prevDate = moment(currentDate)
+      .subtract(1, 'day')
+      .startOf('day');
+    const nextDate = moment(currentDate)
+      .add(1, 'day')
+      .startOf('day');
+    const nextDateInFuture = nextDate.isAfter(moment());
 
     return (
-      <div className="screen-view expenses-list">
-        {sameDayData && (
-          <div className="expenses-list__date">
-            {moment(expenses[0].date).format('LL')}
-          </div>
-        )}
-
-        <div className="expenses-list__content">
-          {expenses.map(expense => (
-            <ExpenseView
-              key={expense.id}
-              expense={expense}
-              moneyFormatter={moneyFormatter}
-              dateFormatter={
-                sameDayData ? timeOnlyFormatter : fullDateFormatter
-              }
-            />
-          ))}
+      <div className="screen-view">
+        <div className="navigation-bar">
+          <button className="navigation-bar__back" onClick={this.gotoPrevDay}>
+            <ChevronLeft />
+            {prevDate.format('D/MM')}
+          </button>
+          {!nextDateInFuture && (
+            <button
+              className="navigation-bar__action"
+              onClick={this.gotoNextDay}
+            >
+              <ChevronRight />
+              {nextDate.format('D/MM')}
+            </button>
+          )}
         </div>
-
-        <div className="expenses-summary">
-          Suma:
-          <span className="expenses-summary__amount">
-            {moneyFormatter(sum)}
-          </span>
+        <div className="expenses-list">
+          {groupedExpenses.map(dayExpenses => (
+            <DayExpenses key={dayExpenses.id} day={dayExpenses} />
+          ))}
         </div>
       </div>
     );

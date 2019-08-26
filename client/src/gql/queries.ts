@@ -20,6 +20,19 @@ export const GetTodaysExpenses = `
     }
 `;
 
+export const GetExpensesInRange = `
+    query GetExpensesInRange($since: Int!, $to: Int!) {
+        getExpenses(since: $since, to: $to) {
+            id
+            user
+            date
+            amount
+            description
+            categories
+        }
+    }
+`;
+
 export const CreateExpense = `
     mutation Mutation($user: String!, $amount:Int!, $date:Int, $description: String, $category: [String!]) {
         createExpense(input:{

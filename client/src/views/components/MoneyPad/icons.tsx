@@ -91,6 +91,15 @@ export const MusicIcon: React.FC<IconProps> = props => (
   </Icon>
 );
 
+export const FoodIcon: React.FC<IconProps> = props => (
+  <Icon {...props}>
+    <path d="M4,12 L20,12 L20,18 C20,20.209139 18.209139,22 16,22 L8,22 C5.790861,22 4,20.209139 4,18 L4,12 Z"></path>
+    <path d="M17,2 C16.4888731,3.09830729 16.4888731,4.11301491 17,5.04412287 C17.5111269,5.97523082 17.5111269,6.9605232 17,8"></path>
+    <path d="M12,2 C11.4888731,3.09830729 11.4888731,4.11301491 12,5.04412287 C12.5111269,5.97523082 12.5111269,6.9605232 12,8"></path>
+    <path d="M7,2 C6.48887311,3.09830729 6.48887311,4.11301491 7,5.04412287 C7.51112689,5.97523082 7.51112689,6.9605232 7,8"></path>
+  </Icon>
+);
+
 export const CoffeeIcon: React.FC<IconProps> = props => (
   <Icon {...props}>
     <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
@@ -169,6 +178,12 @@ export const ChevronLeft: React.FC<IconProps> = props => (
   </Icon>
 );
 
+export const ChevronRight: React.FC<IconProps> = props => (
+  <Icon {...props}>
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </Icon>
+);
+
 const IconsMap = new Map<string, React.ComponentType<IconProps>>([
   ['$default', HashIcon],
   ['smile', SmileIcon],
@@ -181,6 +196,7 @@ const IconsMap = new Map<string, React.ComponentType<IconProps>>([
   ['book', BookIcon],
   ['music', MusicIcon],
   ['coffee', CoffeeIcon],
+  ['food', FoodIcon],
   ['star', StarIcon],
   ['grid', GridIcon]
 ]);

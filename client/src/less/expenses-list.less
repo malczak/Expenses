@@ -1,25 +1,17 @@
 .expenses-list {
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: scroll;
 
     &.expenses-list--empty {
         align-items:center;
         justify-content: center;
     }
 
-    & .expenses-list__date {
-        font-size: 1.4rem;
-        padding: 0.5em;
-        text-align: center;
-    }
-
-    & .expenses-list__content {
+    & .expenses-day__content {
         flex-grow: 1;
-        overflow-y: scroll;
-        padding-bottom: 64px;
     }
 
-    & .expenses-list__item {
+    & .expenses-item {
         padding: 0.75em;
         border-bottom: 1px solid #efefef;
     }
@@ -50,12 +42,20 @@
         font-size: 0.8em;
     }
 
-    & .expenses-summary {
-        padding: 1em 0.5em;
-        border-top: 1px solid #efefef;
+    & .expenses-day__header {
+        font-size: 1.4rem;
+        padding: 0.5em;
+        text-align: center;
+        background: #efefef;
     }
 
-    & .expenses-summary__amount {
+    & .expenses-day__summary {
+        padding: 1em 0.5em;
+        border-top: 1px solid #efefef;
+        background: #efefef;
+    }
+
+    & .expenses-day__summary__amount {
         font-size: 1.1em;
         font-weight: 400;
         margin: 0 0.2em;

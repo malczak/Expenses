@@ -5,9 +5,12 @@ import { Expense } from 'app/models/Expense';
 import { Users } from 'app/data';
 import sleep from 'app/utils/sleep';
 import Client from 'app/gql/Client';
-import { GetTodaysExpenses, ExpenseType, CreateExpense } from 'app/gql/queries';
-import { utimes } from 'fs';
-import { delay } from 'q';
+import {
+  GetTodaysExpenses,
+  ExpenseType,
+  CreateExpense,
+  GetExpensesInRange
+} from 'app/gql/queries';
 
 const LCUserKey = '$user';
 const LCPendingExpensesKey = '$pending';
@@ -17,6 +20,9 @@ export class AppStore {
 
   @observable.ref
   user?: User = null;
+
+  @observable.ref
+  date: Date = null;
 
   @observable.shallow
   expenses: Expense[] = [];
@@ -49,6 +55,15 @@ export class AppStore {
   @action
   setUser(user?: User) {
     this.user = user;
+  }
+
+  @action
+  setDate(date: Date) {
+    if (this.date && this.date.getTime() == date.getTime()) {
+      return;
+    }
+    this.date = date;
+    this.setExpenses(undefined);
   }
 
   @action
@@ -184,9 +199,26 @@ export class AppStore {
   }
 
   fetchTodaysExpenses() {
+    this.setDate(new Date());
     this.toExpenses(this.client.query(GetTodaysExpenses)).then(expenses => {
       this.setExpenses(expenses);
     });
+  }
+
+  fetchDateExpenses(date: Date) {
+    const since = moment(date)
+      .startOf('day')
+      .unix();
+    const to = moment(date)
+      .endOf('day')
+      .unix();
+
+    this.setDate(date);
+    this.toExpenses(this.client.query(GetExpensesInRange, { since, to })).then(
+      expenses => {
+        this.setExpenses(expenses);
+      }
+    );
   }
 
   // -----------------------
