@@ -1,5 +1,5 @@
 export class LoadableProgress {
-  value: number = 0.0;
+  value: number;
 
   constructor(value?: number) {
     this.value = value;
@@ -28,6 +28,8 @@ export class Loadable<T> {
 
   constructor(state: LoadableState);
   constructor(value: T, state: LoadableState);
+  constructor(error: Error, state: LoadableState);
+  constructor(progress: LoadableProgress, state: LoadableState);
   constructor(value: any, state?: any) {
     if (arguments.length == 2) {
       this.value = <T>value;
@@ -61,21 +63,22 @@ export class Loadable<T> {
     return this.hasError;
   }
 
-  static empty() {
-    return new Loadable(null, LoadableState.empty);
+  static empty<T>() {
+    return new Loadable<T>(null, LoadableState.empty);
   }
 
-  static loading(progress: number) {
-    return new Loadable(progress, LoadableState.loading);
+  static loading<T>(progress: number = null) {
+    return new Loadable<T>(
+      new LoadableProgress(progress),
+      LoadableState.loading
+    );
   }
 
-  static error(error: Error) {
-    return new Loadable(error, LoadableState.error);
+  static error<T>(error: Error) {
+    return new Loadable<T>(error, LoadableState.error);
   }
 
   static available<T>(value: T) {
-    return new Loadable(value, LoadableState.available);
+    return new Loadable<T>(value, LoadableState.available);
   }
 }
-
-export default Loadable;

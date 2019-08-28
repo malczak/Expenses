@@ -11,11 +11,6 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
-// Settings
-const settings = {
-    browsers: ['last 2 versions', 'ie > 11']
-};
-
 module.exports = function(commonConfig, opts = {}) {
     const { stage, paths, stageConfig } = opts;
 
@@ -54,9 +49,6 @@ module.exports = function(commonConfig, opts = {}) {
                         preset: [
                             'advanced',
                             {
-                                autoprefixer: {
-                                    browsers: settings.browsers
-                                },
                                 zindex: false,
                                 mergeIdents: false,
                                 reduceIdents: false,

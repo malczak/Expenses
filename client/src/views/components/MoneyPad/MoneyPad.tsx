@@ -5,7 +5,7 @@ import Money from 'cents';
 import DeviceDetection from 'app/utils/DeviceDetection';
 
 import { CategoryList } from './CategoryList';
-import { DeleteIcon, UploadIcon, getIconByName } from './icons';
+import { DeleteIcon, UploadIcon } from './icons';
 import { Categories } from 'app/data';
 import { Expense } from 'app/models/Expense';
 
@@ -28,7 +28,7 @@ const toCurrency = (amount: number) =>
   accounting.formatMoney(Money.cents(amount).toFixed(), { format: '%v' });
 
 type MoneyInputProps = {
-  onCreate: (expense: Expense) => void;
+  onCreate: () => void;
 };
 
 type MoneyInputState = {
@@ -54,6 +54,15 @@ export class MoneyPad extends React.Component<
     this.setState({ amount: parseInt(newAmount) });
   }
 
+  createExpense(): Expense {
+    const { amount, category, description } = this.state;
+    const expense = new Expense();
+    expense.amount = Money.cents(amount);
+    expense.category = category;
+    expense.description = description;
+    return expense;
+  }
+
   // -----------------------
   // Handlers
   // -----------------------
@@ -74,12 +83,7 @@ export class MoneyPad extends React.Component<
   onCreateClick = () => {
     const { onCreate } = this.props;
     if (typeof onCreate === 'function') {
-      const { amount, category, description } = this.state;
-      const expense = new Expense();
-      expense.amount = Money.cents(amount);
-      expense.category = category;
-      expense.description = description;
-      onCreate(expense);
+      onCreate();
     }
 
     this.setState({ amount: 0, description: '', category: '' });

@@ -1,5 +1,5 @@
 import moment from 'moment';
-import { action, observable, reaction, toJS } from 'mobx';
+import { action, observable, reaction } from 'mobx';
 import { User } from 'app/models/User';
 import { Expense } from 'app/models/Expense';
 import { Users } from 'app/data';
@@ -11,6 +11,7 @@ import {
   CreateExpense,
   GetExpensesInRange
 } from 'app/gql/queries';
+import { Loadable } from 'app/utils/Loadable';
 
 const LCUserKey = '$user';
 const LCPendingExpensesKey = '$pending';
@@ -24,12 +25,17 @@ export class AppStore {
   @observable.ref
   date: Date = null;
 
-  @observable.shallow
-  expenses: Expense[] = [];
+  @observable.ref
+  expenses: Loadable<Expense[]> = Loadable.empty();
 
   processingPending = false;
 
   constructor() {
+    const version = (process.env.version as any) || {};
+    console.warn(
+      `**\nVersion ${version.GIT_BRANCH} #${version.GIT_COMMIT} @ ${version.BUILD_DATE} \n**`
+    );
+
     const server = (process.env.config as any).server;
     this.client = new Client({
       endpoint: server.endpoint,
@@ -68,34 +74,46 @@ export class AppStore {
 
   @action
   addExpense(expense: Expense) {
+    if (!this.expenses.isAvailable) {
+      throw new Error('Unable to add expense');
+    }
+
     expense.user = this.user.name;
-    this.expenses.unshift(expense);
+
+    const data = this.expenses.value;
+    data.unshift(expense);
+    this.setExpenses(Loadable.available(data));
+
     this.pushToPending(expense);
   }
 
   @action
   replaceExpense(id: string, update: Expense) {
-    const index = this.expenses.findIndex(expense => expense.id === id);
+    if (!this.expenses.isAvailable) {
+      throw new Error('Unable to add expense');
+    }
+    const data = this.expenses.value;
+
+    const index = data.findIndex(expense => expense.id === id);
     if (index == -1) {
       return;
     }
-    const expenses = this.expenses.map(expense =>
-      expense.id === id ? update : expense
-    );
-    //@ts-ignore
-    this.expenses.replace(expenses);
+
+    const newData = data.map(expense => (expense.id === id ? update : expense));
+
+    this.setExpenses(Loadable.available(newData));
   }
 
   @action
-  setExpenses(expenses?: Expense[]) {
-    if (expenses) {
-      //@ts-ignore
-      this.expenses.replace(
-        expenses.sort((e1, e2) => (e1.date < e2.date ? 1 : -1))
+  setExpenses(expenses?: Loadable<Expense[]>) {
+    expenses = expenses || Loadable.empty();
+    if (expenses.isAvailable) {
+      const data = expenses.value;
+      this.expenses = Loadable.available(
+        data.sort((e1, e2) => (e1.date < e2.date ? 1 : -1))
       );
     } else {
-      //@ts-ignore
-      this.expenses.clear();
+      this.expenses = expenses;
     }
   }
 
@@ -145,7 +163,7 @@ export class AppStore {
   resetStore() {
     if (this.expenses) {
       //@ts-ignore
-      this.expenses.clear();
+      this.setExpenses(Loadable.empty());
     }
   }
 
@@ -200,9 +218,7 @@ export class AppStore {
 
   fetchTodaysExpenses() {
     this.setDate(new Date());
-    this.toExpenses(this.client.query(GetTodaysExpenses)).then(expenses => {
-      this.setExpenses(expenses);
-    });
+    this.toExpenses(this.client.query(GetTodaysExpenses));
   }
 
   fetchDateExpenses(date: Date) {
@@ -214,11 +230,7 @@ export class AppStore {
       .unix();
 
     this.setDate(date);
-    this.toExpenses(this.client.query(GetExpensesInRange, { since, to })).then(
-      expenses => {
-        this.setExpenses(expenses);
-      }
-    );
+    this.toExpenses(this.client.query(GetExpensesInRange, { since, to }));
   }
 
   // -----------------------
@@ -281,9 +293,18 @@ export class AppStore {
   private toExpenses(
     promise: Promise<null | ExpenseType[]>
   ): Promise<null | Expense[]> {
-    return promise.then(expenses =>
-      expenses.map(item => Expense.fromGQL(item))
-    );
+    this.setExpenses(Loadable.loading());
+    return promise
+      .then(expenses => expenses.map(item => Expense.fromGQL(item)))
+      .then(expenses => {
+        this.setExpenses(Loadable.available(expenses));
+        return expenses;
+      })
+      .catch(error => {
+        console.error(error);
+        this.setExpenses(Loadable.error(error));
+        throw error;
+      });
   }
 }
 

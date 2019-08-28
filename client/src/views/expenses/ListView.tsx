@@ -8,13 +8,14 @@ import {
   getIconByName,
   UploadIcon,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Refresh
 } from '../components/MoneyPad/icons';
 import { getCategoryByName } from 'app/data';
 import Money from 'cents';
 
 const moneyFormatter = (money: Money) =>
-  accounting.formatMoney(money.toFixed());
+  accounting.formatMoney(money.toFixed(), { format: '%v' });
 const fullDateFormatter = (date: Date) => moment(date).format('l LT');
 const timeOnlyFormatter = (date: Date) => moment(date).format('LT');
 
@@ -53,7 +54,8 @@ class ExpenseView extends React.PureComponent<ExpenseViewProps> {
             </div>
           )}
           <div className="expense-item__amount">
-            {moneyFormatter(expense.amount)}
+            <span>{moneyFormatter(expense.amount)}</span>
+            <small>zł</small>
           </div>
         </div>
         <div className="expense-item__footer">
@@ -72,11 +74,20 @@ class ExpenseView extends React.PureComponent<ExpenseViewProps> {
   }
 }
 
-const DayExpenses: React.FC<{ day: DayExpenses }> = ({ day }) => {
+const DayExpenses: React.FC<{
+  day: DayExpenses;
+  onRefresh?: (date: DayExpenses) => void;
+}> = ({ day, onRefresh = () => {} }) => {
   return (
     <div className="expenses-day">
       <div className="expenses-day__header">
         {moment(day.date).format('LL')}
+        <button
+          className="expenses-day__refresh"
+          onClick={() => onRefresh(day)}
+        >
+          <Refresh />
+        </button>
       </div>
 
       <div className="expenses-day__content">
@@ -110,6 +121,10 @@ export class ListExpensesView extends React.Component<
   // -----------------------
   // Handlers
   // -----------------------
+  onDayRefresh = (day: DayExpenses) => {
+    this.props.appStore.fetchDateExpenses(day.date);
+  };
+
   gotoPrevDay = () => {
     const date = moment(this.props.appStore.date)
       .subtract(1, 'day')
@@ -129,9 +144,9 @@ export class ListExpensesView extends React.Component<
   // -----------------------
   groupByDay(): DayExpenses[] {
     const expenses = this.props.appStore.expenses;
-    if (!expenses || !expenses.length) return [];
+    if (!expenses || !expenses.isAvailable) return [];
 
-    const dayExpensesMap = expenses.reduce((map, expense) => {
+    const dayExpensesMap = expenses.value.reduce((map, expense) => {
       const expenseDate = moment(expense.date);
       const dayStr = expenseDate.format('DDMMYY');
 
@@ -164,16 +179,17 @@ export class ListExpensesView extends React.Component<
   // Render
   // -----------------------
   render() {
+    const expenses = this.props.appStore.expenses;
     const currentDate = this.props.appStore.date;
     const groupedExpenses = this.groupByDay();
 
-    if (!groupedExpenses.length) {
-      return (
-        <div className="screen-view expenses-list expenses-list--empty">
-          <div>No expenses 💸</div>
-        </div>
-      );
-    }
+    // if (!groupedExpenses.length) {
+    //   return (
+    //     <div className="screen-view expenses-list expenses-list--empty">
+    //       <div>No expenses 💸</div>
+    //     </div>
+    //   );
+    // }
 
     const prevDate = moment(currentDate)
       .subtract(1, 'day')
@@ -182,17 +198,19 @@ export class ListExpensesView extends React.Component<
       .add(1, 'day')
       .startOf('day');
     const nextDateInFuture = nextDate.isAfter(moment());
+    const isEmpty =
+      expenses.isEmpty || (expenses.isAvailable && groupedExpenses.length == 0);
 
     return (
       <div className="screen-view">
         <div className="navigation-bar">
-          <button className="navigation-bar__back" onClick={this.gotoPrevDay}>
+          <button className="navigation-bar__button" onClick={this.gotoPrevDay}>
             <ChevronLeft />
             {prevDate.format('D/MM')}
           </button>
           {!nextDateInFuture && (
             <button
-              className="navigation-bar__action"
+              className="navigation-bar__button navigation-bar__button--reverse"
               onClick={this.gotoNextDay}
             >
               <ChevronRight />
@@ -201,9 +219,20 @@ export class ListExpensesView extends React.Component<
           )}
         </div>
         <div className="expenses-list">
-          {groupedExpenses.map(dayExpenses => (
-            <DayExpenses key={dayExpenses.id} day={dayExpenses} />
-          ))}
+          {isEmpty ? (
+            <div>No expenses 💸</div>
+          ) : expenses.isLoading ? (
+            <div>Loading expenses 💸</div>
+          ) : (
+            expenses.isAvailable &&
+            groupedExpenses.map(dayExpenses => (
+              <DayExpenses
+                key={dayExpenses.id}
+                day={dayExpenses}
+                onRefresh={this.onDayRefresh}
+              />
+            ))
+          )}
         </div>
       </div>
     );

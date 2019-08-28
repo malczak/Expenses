@@ -193,7 +193,13 @@ module.exports = function(env = {}) {
             new webpack.DefinePlugin({
                 'process.env': {
                     BROWSER: JSON.stringify(true),
-                    config: JSON.stringify(clientConfig)
+                    config: JSON.stringify(clientConfig),
+                    version: JSON.stringify({
+                        BUILD_TAG: env.tag || gitBranch,
+                        BUILD_DATE: new Date().toUTCString(),
+                        GIT_COMMIT: gitCommit,
+                        GIT_BRANCH: gitBranch
+                    })
                 }
             }),
             new webpack.ProvidePlugin({
@@ -203,13 +209,6 @@ module.exports = function(env = {}) {
                 action: ['mobx', 'action'],
                 computed: ['mobx', 'computed'],
                 React: 'react'
-            }),
-            new webpack.DefinePlugin({
-                BUILD_TAG: JSON.stringify(env.tag || gitBranch),
-                BUILD_DATE: JSON.stringify(new Date().toUTCString()),
-
-                GIT_COMMIT: JSON.stringify(gitCommit),
-                GIT_BRANCH: JSON.stringify(gitBranch)
             }),
             new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
             new MiniCssExtractPlugin({ filename: '[name].css' }),

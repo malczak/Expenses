@@ -43,10 +43,25 @@
     }
 
     & .expenses-day__header {
+        position: relative;
         font-size: 1.4rem;
         padding: 0.5em;
         text-align: center;
         background: #efefef;
+    }
+
+    & .expenses-day__refresh {
+        position: absolute;
+        background: transparent;
+        right: 5px;
+        padding: 4px;
+        line-height: 0;
+        margin-top: -4px;
+
+        &:active {
+            border-radius: 2px;
+            background: white;
+        }
     }
 
     & .expenses-day__summary {
@@ -91,5 +106,9 @@
         flex-grow: 1;
         font-size: 1.4em;
         text-align: right;
+        & small {
+            margin: 0 0 0 0.1em;
+            font-size: initial;
+        }
     }
 }

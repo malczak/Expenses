@@ -5,7 +5,7 @@ import { AppContainer } from 'react-hot-loader';
 
 import App from './App';
 
-import 'less/index.less';
+import './less/index.less';
 
 declare let module: any;
 
