@@ -1,4 +1,3 @@
-const cuid = require("cuid");
 const glob = require("glob");
 const path = require("path");
 
@@ -52,13 +51,10 @@ const getPaths = () => {
   };
 };
 
-const generateUID = () => cuid();
-
 module.exports = {
   readFiles,
   getStackName,
   fetchStackInfo,
   withLowercaseKeys,
-  getPaths,
-  generateUID
+  getPaths
 };

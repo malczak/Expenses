@@ -26,7 +26,6 @@ provider:
     variableSyntax: "\\${{([ ~:a-zA-Z0-9._@\\'\",\\-\\/\\(\\)]+?)}}" # notice the double quotes for yaml to ignore the escape characters!
     stage: ${{opt:stage,'dev'}}
     region: ${{opt:region, 'us-east-1'}}
-    uid: ${{file(./serverless_plugins/utils.js):generateUID}}
     versionFunctions: false
 
 package:
@@ -175,7 +174,7 @@ resources:
         DynamoDBTable:
             Type: "AWS::DynamoDB::Table"
             Properties:
-                TableName: "Expenses_${{self:provider.stage}}_${{self:provider.uid}}"
+                TableName: "Expenses_${{self:provider.stage}}"
                 BillingMode: "PAY_PER_REQUEST"
                 AttributeDefinitions:
                     - AttributeName: "id"
