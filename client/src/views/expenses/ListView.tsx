@@ -102,6 +102,9 @@ export class ListExpensesView extends React.Component<
     const isEmpty =
       expenses.isEmpty || (expenses.isAvailable && groupedExpenses.length == 0);
 
+    const isSingleDay = isSingleDayPeriod(currentPeriod);
+    const showStats = !isSingleDay;
+
     return (
       <div className="screen-view">
         <div className="navigation-bar">
@@ -113,7 +116,7 @@ export class ListExpensesView extends React.Component<
             {prevDate.format('D/MM')}
           </button>
 
-          {isSingleDayPeriod(currentPeriod) ? (
+          {isSingleDay ? (
             <button onClick={() => this.props.appStore.fetchWeekExpenses()}>
               Statystyki tygodnia
             </button>
@@ -145,7 +148,7 @@ export class ListExpensesView extends React.Component<
                   expenses={groupedExpenses}
                   onDayRefresh={this.onDayRefresh}
                 />
-                <ExpensesStats expenses={expenses.value} />
+                {showStats && <ExpensesStats expenses={expenses.value} />}
               </>
             )
           )}
