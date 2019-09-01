@@ -9,6 +9,7 @@
 
     & .expenses-day__content {
         flex-grow: 1;
+        min-height: 1px;
     }
 
     & .expenses-item {
@@ -53,6 +54,20 @@
     & .expenses-day__refresh {
         position: absolute;
         background: transparent;
+        left: 5px;
+        padding: 4px;
+        line-height: 0;
+        margin-top: -4px;
+
+        &:active {
+            border-radius: 2px;
+            background: white;
+        }
+    }
+
+    & .expenses-day__collapse {
+        position: absolute;
+        background: transparent;
         right: 5px;
         padding: 4px;
         line-height: 0;
@@ -68,6 +83,7 @@
         padding: 1em 0.5em;
         border-top: 1px solid #efefef;
         background: #efefef;
+        border-bottom: 2px solid #ffffff;
     }
 
     & .expenses-day__summary__amount {
@@ -110,5 +126,32 @@
             margin: 0 0 0 0.1em;
             font-size: initial;
         }
+    }
+
+    & .expenses-stats {
+        max-width: 80%;
+        margin: 0 auto;
+        list-style: none;
+    }
+
+    & .expenses-stats__item {
+        display: flex;
+        flex-direction: row;
+         > span {
+            width: 50%;
+            &:first-child {
+                text-align: right;
+            }
+            &:last-child {
+                flex-grow: 0;
+                width: auto;
+                text-align: left;
+                margin-left: 0.2em;
+            }
+         }
+    }
+
+    & .expenses-stats__itemvalue {
+
     }
 }

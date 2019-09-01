@@ -12,6 +12,14 @@ import {
   GetExpensesInRange
 } from 'app/gql/queries';
 import { Loadable } from 'app/utils/Loadable';
+import {
+  TimePeriod,
+  timePeriodsAreEqual,
+  createDayPeriod,
+  createPeriod,
+  createTodayPeriod,
+  createThisWeekPeriod
+} from 'app/utils/Time';
 
 const LCUserKey = '$user';
 const LCPendingExpensesKey = '$pending';
@@ -23,7 +31,7 @@ export class AppStore {
   user?: User = null;
 
   @observable.ref
-  date: Date = null;
+  period: TimePeriod = null;
 
   @observable.ref
   expenses: Loadable<Expense[]> = Loadable.empty();
@@ -64,11 +72,11 @@ export class AppStore {
   }
 
   @action
-  setDate(date: Date) {
-    if (this.date && this.date.getTime() == date.getTime()) {
+  setPeriod(period: TimePeriod) {
+    if (timePeriodsAreEqual(this.period, period)) {
       return;
     }
-    this.date = date;
+    this.period = period;
     this.setExpenses(undefined);
   }
 
@@ -216,21 +224,23 @@ export class AppStore {
       .then((data: ExpenseType) => Expense.fromGQL(data));
   }
 
+  fetchWeekExpenses() {
+    this.fetchPeriodExpenses(createThisWeekPeriod());
+  }
+
   fetchTodaysExpenses() {
-    this.setDate(new Date());
+    this.setPeriod(createTodayPeriod());
     this.toExpenses(this.client.query(GetTodaysExpenses));
   }
 
-  fetchDateExpenses(date: Date) {
-    const since = moment(date)
-      .startOf('day')
-      .unix();
-    const to = moment(date)
-      .endOf('day')
-      .unix();
-
-    this.setDate(date);
-    this.toExpenses(this.client.query(GetExpensesInRange, { since, to }));
+  fetchPeriodExpenses(period: TimePeriod) {
+    this.setPeriod(period);
+    this.toExpenses(
+      this.client.query(GetExpensesInRange, {
+        since: moment(period.begin).unix(),
+        to: moment(period.end).unix()
+      })
+    );
   }
 
   // -----------------------

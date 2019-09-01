@@ -1,115 +1,17 @@
 import React from 'react';
-import accounting from 'accounting';
 import moment from 'moment';
 import { StoreProps } from 'app/stores/AppStore';
 import { inject, observer } from 'mobx-react';
 import { Expense } from 'app/models/Expense';
-import {
-  getIconByName,
-  UploadIcon,
-  ChevronLeft,
-  ChevronRight,
-  Refresh
-} from '../components/MoneyPad/icons';
-import { getCategoryByName } from 'app/data';
+import { ChevronLeft, ChevronRight } from '../components/MoneyPad/icons';
 import Money from 'cents';
-
-const moneyFormatter = (money: Money) =>
-  accounting.formatMoney(money.toFixed(), { format: '%v' });
-const fullDateFormatter = (date: Date) => moment(date).format('l LT');
-const timeOnlyFormatter = (date: Date) => moment(date).format('LT');
-
-type ExpenseViewProps = {
-  expense: Expense;
-  moneyFormatter: (money: Money) => string;
-  dateFormatter: (date: Date) => string;
-};
-
-type DayExpenses = {
-  id: string;
-  date: Date;
-  total: Money;
-  expenses: Expense[];
-};
-
-class ExpenseView extends React.PureComponent<ExpenseViewProps> {
-  render() {
-    const { expense, moneyFormatter, dateFormatter } = this.props;
-    const category = getCategoryByName(expense.category);
-    const Icon = category ? getIconByName(category.icon) : null;
-    return (
-      <div className="expenses-item" data-id={expense.id}>
-        <div className="expense-item__header">
-          <div className="expense-item__time">
-            {dateFormatter(expense.date)}
-          </div>
-          {!expense.synchronized && <UploadIcon color={'red'} />}
-        </div>
-        <div className="expense-item__content">
-          {expense.description ? (
-            <div className="expense-item__desc">{expense.description}</div>
-          ) : (
-            <div className="expense-item__user">
-              {category ? category.name : expense.user}
-            </div>
-          )}
-          <div className="expense-item__amount">
-            <span>{moneyFormatter(expense.amount)}</span>
-            <small>zł</small>
-          </div>
-        </div>
-        <div className="expense-item__footer">
-          <small>{expense.user} in</small>
-          <div className="expense-item__category">
-            {Icon && (
-              <span>
-                <Icon width="100%" height="100%" />
-              </span>
-            )}
-            <small>{category ? category.name : '-'}</small>
-          </div>
-        </div>
-      </div>
-    );
-  }
-}
-
-const DayExpenses: React.FC<{
-  day: DayExpenses;
-  onRefresh?: (date: DayExpenses) => void;
-}> = ({ day, onRefresh = () => {} }) => {
-  return (
-    <div className="expenses-day">
-      <div className="expenses-day__header">
-        {moment(day.date).format('LL')}
-        <button
-          className="expenses-day__refresh"
-          onClick={() => onRefresh(day)}
-        >
-          <Refresh />
-        </button>
-      </div>
-
-      <div className="expenses-day__content">
-        {day.expenses.map(expense => (
-          <ExpenseView
-            key={expense.id}
-            expense={expense}
-            moneyFormatter={moneyFormatter}
-            dateFormatter={timeOnlyFormatter}
-          />
-        ))}
-      </div>
-
-      <div className="expenses-day__summary">
-        Suma:
-        <span className="expenses-day__summary__amount">
-          {moneyFormatter(day.total)}
-        </span>
-      </div>
-    </div>
-  );
-};
+import {
+  getNextPeriod,
+  getPrevPeriod,
+  isSingleDayPeriod
+} from 'app/utils/Time';
+import { DayExpenses, ExpansesList } from './ExpansesList';
+import { ExpensesStats } from './ExpensesStats';
 
 type ListExpensesProps = {};
 
@@ -122,21 +24,17 @@ export class ListExpensesView extends React.Component<
   // Handlers
   // -----------------------
   onDayRefresh = (day: DayExpenses) => {
-    this.props.appStore.fetchDateExpenses(day.date);
+    this.props.appStore.fetchPeriodExpenses(this.props.appStore.period);
   };
 
-  gotoPrevDay = () => {
-    const date = moment(this.props.appStore.date)
-      .subtract(1, 'day')
-      .toDate();
-    this.props.appStore.fetchDateExpenses(date);
+  gotoPrevPeriod = () => {
+    const period = getPrevPeriod(this.props.appStore.period);
+    this.props.appStore.fetchPeriodExpenses(period);
   };
 
-  gotoNextDay = () => {
-    const date = moment(this.props.appStore.date)
-      .add(1, 'day')
-      .toDate();
-    this.props.appStore.fetchDateExpenses(date);
+  gotoNextPeriod = () => {
+    const period = getNextPeriod(this.props.appStore.period);
+    this.props.appStore.fetchPeriodExpenses(period);
   };
 
   // -----------------------
@@ -168,11 +66,14 @@ export class ListExpensesView extends React.Component<
     }, new Map<string, DayExpenses>());
 
     const dayExpenses = [...dayExpensesMap.values()];
-    return dayExpenses.length > 1
-      ? dayExpenses.sort((a, b) =>
-          a.date.getTime() < b.date.getTime() ? -1 : 1
-        )
-      : dayExpenses;
+
+    if (dayExpenses.length > 1) {
+      return dayExpenses.sort((a, b) =>
+        a.date.getTime() < b.date.getTime() ? -1 : 1
+      );
+    }
+
+    return dayExpenses;
   }
 
   // -----------------------
@@ -180,7 +81,7 @@ export class ListExpensesView extends React.Component<
   // -----------------------
   render() {
     const expenses = this.props.appStore.expenses;
-    const currentDate = this.props.appStore.date;
+    const currentPeriod = this.props.appStore.period;
     const groupedExpenses = this.groupByDay();
 
     // if (!groupedExpenses.length) {
@@ -191,27 +92,41 @@ export class ListExpensesView extends React.Component<
     //   );
     // }
 
-    const prevDate = moment(currentDate)
-      .subtract(1, 'day')
-      .startOf('day');
-    const nextDate = moment(currentDate)
-      .add(1, 'day')
-      .startOf('day');
+    const pervPeriod = getPrevPeriod(currentPeriod);
+    const nextPeriod = getNextPeriod(currentPeriod);
+    const prevDate = moment(pervPeriod.begin);
+    const nextDate = moment(nextPeriod.begin);
+
     const nextDateInFuture = nextDate.isAfter(moment());
+
     const isEmpty =
       expenses.isEmpty || (expenses.isAvailable && groupedExpenses.length == 0);
 
     return (
       <div className="screen-view">
         <div className="navigation-bar">
-          <button className="navigation-bar__button" onClick={this.gotoPrevDay}>
+          <button
+            className="navigation-bar__button"
+            onClick={this.gotoPrevPeriod}
+          >
             <ChevronLeft />
             {prevDate.format('D/MM')}
           </button>
+
+          {isSingleDayPeriod(currentPeriod) ? (
+            <button onClick={() => this.props.appStore.fetchWeekExpenses()}>
+              Statystyki tygodnia
+            </button>
+          ) : (
+            <button onClick={() => this.props.appStore.fetchTodaysExpenses()}>
+              Raport dzienny
+            </button>
+          )}
+
           {!nextDateInFuture && (
             <button
               className="navigation-bar__button navigation-bar__button--reverse"
-              onClick={this.gotoNextDay}
+              onClick={this.gotoNextPeriod}
             >
               <ChevronRight />
               {nextDate.format('D/MM')}
@@ -224,14 +139,15 @@ export class ListExpensesView extends React.Component<
           ) : expenses.isLoading ? (
             <div>Loading expenses 💸</div>
           ) : (
-            expenses.isAvailable &&
-            groupedExpenses.map(dayExpenses => (
-              <DayExpenses
-                key={dayExpenses.id}
-                day={dayExpenses}
-                onRefresh={this.onDayRefresh}
-              />
-            ))
+            expenses.isAvailable && (
+              <>
+                <ExpansesList
+                  expenses={groupedExpenses}
+                  onDayRefresh={this.onDayRefresh}
+                />
+                <ExpensesStats expenses={expenses.value} />
+              </>
+            )
           )}
         </div>
       </div>
