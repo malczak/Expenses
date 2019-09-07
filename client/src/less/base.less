@@ -1,3 +1,8 @@
+/*** vars ***/
+@green: #97ce97;
+@red: #C2847A;
+@blue:  #97ADCE;
+
 /*** Reset CSS ***/
 * {
     margin: 0;
@@ -97,5 +102,29 @@ body input, body textarea, body select {
     &:active {
         background: lighten(#76abe9, 20%);
         transform: scale(0.9, 0.9);
+    }
+}
+
+.button-positive-bg {
+    background: @green;
+    color: white;
+    &:active {
+        background: darken(@green, 10%)
+    }
+}
+
+.button-negative-bg {
+    background: @red;
+    color: white;
+    &:active {
+        background: darken(@red, 10%)
+    }
+}
+
+.button-neutral-bg {
+    background: @blue;
+    color: white;
+    &:active {
+        background: darken(@blue, 10%)
     }
 }

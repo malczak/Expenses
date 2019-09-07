@@ -8,14 +8,22 @@ import { inject, observer } from 'mobx-react';
 import { ListExpensesView } from 'app/views/expenses/ListView';
 import { AddExpenseButton } from 'app/views/components/AddExpenseButton';
 import { CreateExpenseView } from 'app/views/expenses/CreateView';
+import { EditExpenseView } from 'app/views/expenses/EditView';
 import { LoginView } from 'app/views/LoginView';
 import { Expense } from 'app/models/Expense';
+
+const enum ViewMode {
+  showList = 1,
+  createExpense = 2,
+  editExpense = 3
+}
 
 type MainViewProps = {};
 
 type MainViewState = {
-  isCreatingNew: boolean;
+  mode: ViewMode;
   busy: boolean;
+  expense?: Expense;
 };
 
 @inject('appStore')
@@ -24,14 +32,49 @@ class MainView extends React.Component<
   MainViewProps & StoreProps,
   MainViewState
 > {
-  state = { isCreatingNew: false, busy: false };
+  state: MainViewState = { mode: ViewMode.showList, busy: false };
   // -----------------------
   // Methods
   // -----------------------
+
+  updateExpense(expense: Expense) {
+    this.props.appStore.updateExpense(expense);
+    this.setState({ mode: ViewMode.showList });
+  }
+
   addExpense(expense: Expense) {
     this.props.appStore.addExpense(expense);
-    this.setState({ isCreatingNew: false });
+    this.setState({ mode: ViewMode.showList });
   }
+
+  // -----------------------
+  // Handlers
+  // -----------------------
+  onExpenseEdit = (expense: Expense) => {
+    this.setState({
+      mode: ViewMode.editExpense,
+      expense: expense
+    });
+  };
+
+  onExpenseDelete = (expense: Expense): Promise<Boolean> => {
+    return new Promise<Boolean>(resolve => {
+      const message = `Czy chcesz skasować wpis '${expense.description ||
+        expense.category ||
+        ''}'? `;
+
+      if (confirm(message)) {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    }).then(confirmed => {
+      if (confirmed) {
+        this.props.appStore.deleteExpense(expense);
+      }
+      return confirmed;
+    });
+  };
 
   // -----------------------
   // Render
@@ -48,15 +91,29 @@ class MainView extends React.Component<
 
     return (
       <div className="screen-view">
-        <ListExpensesView />
-        <AddExpenseButton
-          onClick={() => this.setState({ isCreatingNew: true })}
+        <ListExpensesView
+          onExpenseEdit={this.onExpenseEdit}
+          onExpenseDelete={this.onExpenseDelete}
         />
-        {this.state.isCreatingNew && (
+        <AddExpenseButton
+          onClick={() => this.setState({ mode: ViewMode.createExpense })}
+        />
+
+        {this.state.mode == ViewMode.createExpense && (
           <CreateExpenseView
-            onCancel={() => this.setState({ isCreatingNew: false })}
+            onCancel={() => this.setState({ mode: ViewMode.showList })}
             onCreate={expense => {
               this.addExpense(expense);
+            }}
+          />
+        )}
+
+        {this.state.mode == ViewMode.editExpense && (
+          <EditExpenseView
+            expense={this.state.expense}
+            onCancel={() => this.setState({ mode: ViewMode.showList })}
+            onSave={expense => {
+              this.updateExpense(expense);
             }}
           />
         )}

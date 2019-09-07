@@ -1,3 +1,6 @@
+@open-animation-time: 0.15s;
+@actions-width: 120px;
+
 .expenses-list {
     flex-direction: column;
     overflow-y: scroll;
@@ -13,11 +16,46 @@
     }
 
     & .expenses-item {
-        padding: 0.75em;
+        position: relative;
         border-bottom: 1px solid #efefef;
     }
 
+    & .expenses-item--closed .expense-item__content {
+        transform: translate(0, 0)
+    }
+
+    & .expenses-item--opened .expense-item__content {
+        background: #eeeeee;
+        transform: translate(-@actions-width, 0);
+    }
+
     & .expense-item__content {
+        position: relative;
+        background: #fefefe;
+        padding: 0.75em;
+        -webkit-transition: transform @open-animation-time ease-out, background @open-animation-time ease-out;
+	    -moz-transition: transform @open-animation-time ease-out, background @open-animation-time ease-out;
+	    -ms-transition: transform @open-animation-time ease-out, background @open-animation-time ease-out;
+        -o-transition: transform @open-animation-time ease-out, background @open-animation-time ease-out;
+        transition: transform @open-animation-time ease-out, background @open-animation-time ease-out;
+    }
+
+    & .expense-item__actions {
+        position: absolute;
+        display: flex;
+        flex-direction: row;
+        width: @actions-width;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 0;
+        & > button {
+            text-transform: uppercase;
+            flex: 1;
+        }
+    }
+
+    & .expense-item__data {
         display: flex;
         flex-direction: row;
         align-items: center;

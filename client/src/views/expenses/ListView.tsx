@@ -1,8 +1,8 @@
 import React from 'react';
 import moment from 'moment';
-import { StoreProps } from 'app/stores/AppStore';
+import Tocca from 'tocca';
 import { inject, observer } from 'mobx-react';
-import { Expense } from 'app/models/Expense';
+import { StoreProps } from 'app/stores/AppStore';
 import { ChevronLeft, ChevronRight } from '../components/MoneyPad/icons';
 import Money from 'cents';
 import {
@@ -12,8 +12,14 @@ import {
 } from 'app/utils/Time';
 import { DayExpenses, ExpansesList } from './ExpansesList';
 import { ExpensesStats } from './ExpensesStats';
+import { Expense } from 'app/models/Expense';
 
-type ListExpensesProps = {};
+const $TOCCA = Tocca;
+
+type ListExpensesProps = {
+  onExpenseEdit: (expense: Expense) => void;
+  onExpenseDelete: (expense: Expense) => void;
+};
 
 @inject('appStore')
 @observer
@@ -24,17 +30,17 @@ export class ListExpensesView extends React.Component<
   // Handlers
   // -----------------------
   onDayRefresh = (day: DayExpenses) => {
-    this.props.appStore.fetchPeriodExpenses(this.props.appStore.period);
+    this.props.appStore.$fetchPeriodExpenses(this.props.appStore.period);
   };
 
   gotoPrevPeriod = () => {
     const period = getPrevPeriod(this.props.appStore.period);
-    this.props.appStore.fetchPeriodExpenses(period);
+    this.props.appStore.$fetchPeriodExpenses(period);
   };
 
   gotoNextPeriod = () => {
     const period = getNextPeriod(this.props.appStore.period);
-    this.props.appStore.fetchPeriodExpenses(period);
+    this.props.appStore.$fetchPeriodExpenses(period);
   };
 
   // -----------------------
@@ -117,11 +123,11 @@ export class ListExpensesView extends React.Component<
           </button>
 
           {isSingleDay ? (
-            <button onClick={() => this.props.appStore.fetchWeekExpenses()}>
+            <button onClick={() => this.props.appStore.$fetchWeekExpenses()}>
               Statystyki tygodnia
             </button>
           ) : (
-            <button onClick={() => this.props.appStore.fetchTodaysExpenses()}>
+            <button onClick={() => this.props.appStore.$fetchTodaysExpenses()}>
               Raport dzienny
             </button>
           )}
@@ -146,6 +152,8 @@ export class ListExpensesView extends React.Component<
               <>
                 <ExpansesList
                   expenses={groupedExpenses}
+                  onExpenseEdit={this.props.onExpenseEdit}
+                  onExpenseDelete={this.props.onExpenseDelete}
                   onDayRefresh={this.onDayRefresh}
                 />
                 {showStats && <ExpensesStats expenses={expenses.value} />}

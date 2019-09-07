@@ -149,6 +149,7 @@ resources:
                     type Mutation {
                         createExpense(input: CreateExpenseInput!): Expense
                         updateExpense(id: ID!, input: UpdateExpenseInput!): Expense
+                        deleteExpense(id: ID!): Expense
                     }
 
                     type Query {
@@ -296,6 +297,75 @@ resources:
                 ResponseMappingTemplate: "$util.toJson($ctx.result.items)"
 
         # Mutation resolvers
+        AppSyncMutateResolverUpdateExpense:
+            Type: "AWS::AppSync::Resolver"
+            DependsOn: AppSyncDataSource
+            Properties:
+                ApiId: !GetAtt AppSyncApi.ApiId
+                TypeName: Mutation
+                FieldName: updateExpense
+                DataSourceName: !GetAtt AppSyncDataSource.Name
+                RequestMappingTemplate: |
+                    {
+                        #set( $input = $context.arguments.input )
+
+                        #set( $expression = "SET" )
+                        #set( $keys = {} )
+                        #set( $values = {} )
+
+                        #foreach( $entry in $input.entrySet() )
+                            #set( $key = $entry.key )
+                            #if( $key != "id" )
+                                #set( $value = $entry.value )
+
+                                #if (($key == 'categories') && ($util.isList($value)))
+                                    #set( $categories = [] )
+
+                                    #foreach( $category in $input.categories )
+                                        #if ($util.isString($category))
+                                            $util.qr($categories.add($category))
+                                        #end
+                                    #end
+
+                                    #if (!$categories.isEmpty())
+                                        #set( $value = $util.dynamodb.toStringSet($categories) )
+                                    #else
+                                        #set( $value = false )
+                                    #end
+                                #else
+                                    #set( $value = $util.dynamodb.toDynamoDB($entry.value) )
+                                #end
+
+
+                                #if ( $value )
+                                    #set( $expression = "${expression} #${key} = :${key}" )
+                                    $util.qr($keys.put("#${key}", $key))
+                                    $util.qr($values.put(":${key}", $value))
+                                #end
+
+                                #if ( $foreach.hasNext )
+                                #set( $expression = "${expression}," )
+                                #end
+                            #end
+                        #end
+
+                        "version" : "2017-02-28",
+                        "operation" : "UpdateItem",
+                        "key" : {
+                            "id": $util.dynamodb.toStringJson($context.arguments.id)
+                        },
+                        "update" : {
+                        "expression" : "${expression}"
+                        #if( !${keys.isEmpty()} )
+                                ,"expressionNames" : $utils.toJson($keys)
+                            #end
+                            #if( !${values.isEmpty()} )
+                                ,"expressionValues" : $utils.toJson($values)
+                            #end
+                        }
+                    }
+                ResponseMappingTemplate: "$util.toJson($ctx.result)"
+
         AppSyncMutateResolverCreateExpense:
             Type: "AWS::AppSync::Resolver"
             DependsOn: AppSyncDataSource
@@ -347,6 +417,24 @@ resources:
                             "id": $util.dynamodb.toStringJson($util.autoId()),
                         },
                         "attributeValues" : $utils.toJson($attribs)
+                    }
+                ResponseMappingTemplate: "$util.toJson($ctx.result)"
+
+        AppSyncMutateResolverDeleteExpense:
+            Type: "AWS::AppSync::Resolver"
+            DependsOn: AppSyncDataSource
+            Properties:
+                ApiId: !GetAtt AppSyncApi.ApiId
+                TypeName: Mutation
+                FieldName: deleteExpense
+                DataSourceName: !GetAtt AppSyncDataSource.Name
+                RequestMappingTemplate: |
+                    {
+                        "version" : "2017-02-28",
+                        "operation" : "DeleteItem",
+                        "key" : {
+                            "id" : $util.dynamodb.toStringJson($ctx.args.id)
+                        }
                     }
                 ResponseMappingTemplate: "$util.toJson($ctx.result)"
 

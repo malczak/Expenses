@@ -1,7 +1,7 @@
 import moment from 'moment';
 import { action, observable, reaction } from 'mobx';
 import { User } from 'app/models/User';
-import { Expense } from 'app/models/Expense';
+import { Expense, ExpenseJSON, ExpenseState } from 'app/models/Expense';
 import { Users } from 'app/data';
 import sleep from 'app/utils/sleep';
 import Client from 'app/gql/Client';
@@ -9,20 +9,26 @@ import {
   GetTodaysExpenses,
   ExpenseType,
   CreateExpense,
-  GetExpensesInRange
+  GetExpensesInRange,
+  UpdateExpense,
+  DeleteExpense
 } from 'app/gql/queries';
 import { Loadable } from 'app/utils/Loadable';
 import {
   TimePeriod,
   timePeriodsAreEqual,
-  createDayPeriod,
-  createPeriod,
   createTodayPeriod,
   createThisWeekPeriod
 } from 'app/utils/Time';
 
 const LCUserKey = '$user';
 const LCPendingExpensesKey = '$pending';
+
+type ExpenseOperation = {
+  type: 'create' | 'update' | 'delete';
+  time: number;
+  expense: ExpenseJSON;
+};
 
 export class AppStore {
   private client: Client;
@@ -55,7 +61,7 @@ export class AppStore {
       () => {
         this.resetStore();
         this.rememberUser();
-        this.fetchTodaysExpenses();
+        this.$fetchTodaysExpenses().then(() => this.sendPendingExpenses());
       }
     );
 
@@ -81,18 +87,62 @@ export class AppStore {
   }
 
   @action
-  addExpense(expense: Expense) {
+  updateExpense(expense: Expense) {
     if (!this.expenses.isAvailable) {
-      throw new Error('Unable to add expense');
+      throw new Error('Expenses not available');
     }
 
+    const data = this.expenses.value;
+    const expenseIndex = data.findIndex(item => item.id === expense.id);
+
+    if (expenseIndex == -1) {
+      throw new Error('Missing expense to edit');
+    }
+
+    expense.setState(ExpenseState.edited);
+    data[expenseIndex] = expense;
+    this.setExpenses(Loadable.available(data));
+
+    this.pushToPending(expense, 'update');
+  }
+
+  @action
+  deleteExpense(expense: Expense) {
+    if (!this.expenses.isAvailable) {
+      throw new Error('Expenses not available');
+    }
+
+    const data = this.expenses.value;
+    const expenseIndex = data.findIndex(item => item.id === expense.id);
+
+    if (expenseIndex == -1) {
+      throw new Error('Missing expense to edit');
+    }
+
+    const udpatedExpense = expense.clone();
+    udpatedExpense.setState(ExpenseState.deleted);
+    data[expenseIndex] = udpatedExpense;
+    this.setExpenses(Loadable.available(data));
+
+    this.pushToPending(udpatedExpense, 'delete');
+  }
+
+  @action
+  addExpense(expense: Expense) {
+    if (!this.expenses.isAvailable) {
+      throw new Error('Expenses not available');
+    }
+
+    expense.date = new Date();
     expense.user = this.user.name;
 
     const data = this.expenses.value;
+
+    expense.setState(ExpenseState.created);
     data.unshift(expense);
     this.setExpenses(Loadable.available(data));
 
-    this.pushToPending(expense);
+    this.pushToPending(expense, 'create');
   }
 
   @action
@@ -108,7 +158,17 @@ export class AppStore {
     }
 
     const newData = data.map(expense => (expense.id === id ? update : expense));
+    this.setExpenses(Loadable.available(newData));
+  }
 
+  @action
+  removeExpense(id: String) {
+    if (!this.expenses.isAvailable) {
+      throw new Error('Unable to add expense');
+    }
+    const data = this.expenses.value;
+
+    const newData = data.filter(expense => expense.id !== id);
     this.setExpenses(Loadable.available(newData));
   }
 
@@ -201,41 +261,36 @@ export class AppStore {
   // -----------------------
   // GQL
   // -----------------------
-  createExpense(expense: Expense): Promise<Expense> {
-    const vars: any = {
-      user: expense.user,
-      amount: expense.amount.cents
-    };
-
-    if (expense.date) {
-      vars.date = moment(expense.date).unix();
-    }
-
-    if (expense.description) {
-      vars.description = expense.description;
-    }
-
-    if (expense.category) {
-      vars.category = [expense.category];
-    }
-
+  $createExpense(expense: Expense): Promise<Expense> {
     return this.client
-      .mutate(CreateExpense, vars)
+      .mutate(CreateExpense, expense.toVars(false))
       .then((data: ExpenseType) => Expense.fromGQL(data));
   }
 
-  fetchWeekExpenses() {
-    this.fetchPeriodExpenses(createThisWeekPeriod());
+  $updateExpense(expense: Expense): Promise<Expense> {
+    return this.client
+      .mutate(UpdateExpense, expense.toVars(true))
+      .then((data: ExpenseType) => Expense.fromGQL(data));
   }
 
-  fetchTodaysExpenses() {
+  $deleteExpense(expense: Expense): Promise<Expense> {
+    return this.client
+      .mutate(DeleteExpense, { id: expense.id })
+      .then((data: ExpenseType) => Expense.fromGQL(data));
+  }
+
+  $fetchWeekExpenses(): Promise<Expense[]> {
+    return this.$fetchPeriodExpenses(createThisWeekPeriod());
+  }
+
+  $fetchTodaysExpenses(): Promise<Expense[]> {
     this.setPeriod(createTodayPeriod());
-    this.toExpenses(this.client.query(GetTodaysExpenses));
+    return this.toExpenses(this.client.query(GetTodaysExpenses));
   }
 
-  fetchPeriodExpenses(period: TimePeriod) {
+  $fetchPeriodExpenses(period: TimePeriod): Promise<Expense[]> {
     this.setPeriod(period);
-    this.toExpenses(
+    return this.toExpenses(
       this.client.query(GetExpensesInRange, {
         since: moment(period.begin).unix(),
         to: moment(period.end).unix()
@@ -246,15 +301,25 @@ export class AppStore {
   // -----------------------
   // Pending expenses
   // -----------------------
-  pushToPending(expense: Expense) {
-    const pendingExpenses = this.loadPendingExpenses();
+  pushToPending(
+    expense: Expense,
+    operationType: 'create' | 'update' | 'delete'
+  ) {
+    const pendingOperations = this.loadPendingExpenses();
 
-    if (pendingExpenses.findIndex(item => item.i === expense.id) != -1) {
+    if (
+      pendingOperations.findIndex(item => item.expense.i === expense.id) != -1
+    ) {
       return;
     }
 
-    pendingExpenses.push(expense.serialize());
-    this.savePendingExpenses(pendingExpenses);
+    const operation: ExpenseOperation = {
+      type: operationType,
+      time: Date.now(),
+      expense: expense.serialize()
+    };
+    pendingOperations.push(operation);
+    this.savePendingExpenses(pendingOperations);
     this.sendPendingExpenses();
   }
 
@@ -263,33 +328,50 @@ export class AppStore {
       return;
     }
 
-    const pendingExpenses = this.loadPendingExpenses();
-    if (!pendingExpenses.length) {
+    const operations = this.loadPendingExpenses();
+    if (!operations.length) {
       return;
     }
 
-    const expense = Expense.deserialize(pendingExpenses.shift());
+    const operation = operations.shift();
+    const expense = Expense.deserialize(operation.expense);
     if (expense) {
-      this.createExpense(expense).then(createdExpense => {
-        this.replaceExpense(expense.id, createdExpense);
-      });
-    }
-    this.savePendingExpenses(pendingExpenses);
+      let action: Promise<void>;
 
-    this.sendPendingExpenses();
+      switch (operation.type) {
+        case 'create':
+          action = this.$createExpense(expense).then(createdExpense => {
+            this.replaceExpense(expense.id, createdExpense);
+          });
+          break;
+        case 'update':
+          action = this.$updateExpense(expense).then(udpatedExpense => {
+            this.replaceExpense(expense.id, udpatedExpense);
+          });
+          break;
+        case 'delete':
+          action = this.$deleteExpense(expense).then(deletedExpense => {
+            this.removeExpense(expense.id);
+          });
+          break;
+      }
+
+      action.then(() => this.sendPendingExpenses());
+    }
+    this.savePendingExpenses(operations);
   }
 
-  loadPendingExpenses(): any[] {
+  loadPendingExpenses(): ExpenseOperation[] {
     const ls = window.localStorage;
     const serializedArr = ls.getItem(LCPendingExpensesKey);
     return typeof serializedArr === 'string' ? JSON.parse(serializedArr) : [];
   }
 
-  savePendingExpenses(expenses: any[]) {
+  savePendingExpenses(operations: ExpenseOperation[]) {
     const ls = window.localStorage;
-    if (expenses.length) {
+    if (operations.length) {
       const serializedArr = JSON.stringify(
-        expenses.sort((e1, e2) => (e1.t < e2.t ? 1 : -1))
+        operations.sort((o1, o2) => (o1.time < o2.time ? 1 : -1))
       );
       ls.setItem(LCPendingExpensesKey, serializedArr);
     } else {

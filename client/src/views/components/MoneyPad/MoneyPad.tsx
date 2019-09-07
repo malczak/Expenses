@@ -28,6 +28,9 @@ const toCurrency = (amount: number) =>
   accounting.formatMoney(Money.cents(amount).toFixed(), { format: '%v' });
 
 type MoneyInputProps = {
+  amount?: number;
+  description?: string;
+  category?: string;
   onCreate: () => void;
 };
 
@@ -49,18 +52,27 @@ export class MoneyPad extends React.Component<
 
   categoriesRef = React.createRef<HTMLDivElement>();
 
+  constructor(props: MoneyInputProps) {
+    super(props);
+    this.state = {
+      amount: props.amount || 0,
+      description: props.description || '',
+      category: props.category || ''
+    };
+  }
+
   appendDigit(digit: string) {
     const newAmount = (this.state.amount || 0).toString() + digit;
     this.setState({ amount: parseInt(newAmount) });
   }
 
-  createExpense(): Expense {
+  createExpense(expenses?: Expense): Expense {
     const { amount, category, description } = this.state;
-    const expense = new Expense();
-    expense.amount = Money.cents(amount);
-    expense.category = category;
-    expense.description = description;
-    return expense;
+    const newExpense = expenses || new Expense();
+    newExpense.amount = Money.cents(amount);
+    newExpense.category = category;
+    newExpense.description = description;
+    return newExpense;
   }
 
   // -----------------------

@@ -17,7 +17,8 @@
     "strictNullChecks": false,
     "paths": {
       "app/*": ["./src/*"],
-      "cents": ["./@types/cents"]
+      "cents": ["./@types/cents"],
+      "tocca": ["./@types/tocca"]
     }
   },
   "include": ["./src/**/*"]

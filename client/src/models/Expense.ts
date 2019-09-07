@@ -4,6 +4,22 @@ import { ExpenseType } from 'app/gql/queries';
 
 const DefaultIdPrefix = '_new:';
 
+export const enum ExpenseState {
+  ready = 0,
+  created = 1,
+  edited = 2,
+  deleted = 3
+}
+
+export type ExpenseJSON = {
+  i: string;
+  u: string;
+  a: number;
+  t: number;
+  d?: string;
+  c?: string;
+};
+
 export class Expense {
   id: string;
   user: string;
@@ -12,12 +28,22 @@ export class Expense {
   description: string;
   category: string;
 
+  $state = ExpenseState.ready;
+
   constructor() {
     this.id = `${DefaultIdPrefix}${Date.now()}`;
   }
 
   get synchronized() {
-    return this.id.indexOf(DefaultIdPrefix) != 0;
+    return this.$state == ExpenseState.ready;
+  }
+
+  getState() {
+    return this.$state;
+  }
+
+  setState(state: ExpenseState) {
+    this.$state = state;
   }
 
   static fromGQL(item: ExpenseType): Expense {
@@ -34,6 +60,7 @@ export class Expense {
 
   clone() {
     const expense = new Expense();
+    expense.id = this.id;
     expense.user = this.user;
     expense.amount = this.amount.clone();
     expense.date = moment(this.date).toDate();
@@ -42,7 +69,32 @@ export class Expense {
     return expense;
   }
 
-  serialize() {
+  toVars(includeId: Boolean = false): any {
+    const vars: any = {
+      user: this.user,
+      amount: this.amount.cents
+    };
+
+    if (this.date) {
+      vars.date = moment(this.date).unix();
+    }
+
+    if (this.description) {
+      vars.description = this.description;
+    }
+
+    if (this.category) {
+      vars.category = [this.category];
+    }
+
+    if (includeId && this.id) {
+      vars.id = this.id;
+    }
+
+    return vars;
+  }
+
+  serialize(): ExpenseJSON {
     const data: any = {
       i: this.id,
       u: this.user,
@@ -60,7 +112,9 @@ export class Expense {
     return data;
   }
 
-  static deserialize(data: { [key: string]: any }): Expense | null {
+  static deserialize(data: ExpenseJSON): Expense | null;
+  static deserialize(data: { [key: string]: any }): Expense | null;
+  static deserialize(data: any): Expense | null {
     const requiredFields = ['i', 'u', 'a', 't'];
     if (!requiredFields.every(key => data[key] != undefined)) {
       return null;
