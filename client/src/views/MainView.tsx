@@ -102,7 +102,7 @@ class MainView extends React.Component<
         {this.state.mode == ViewMode.createExpense && (
           <CreateExpenseView
             onCancel={() => this.setState({ mode: ViewMode.showList })}
-            onCreate={expense => {
+            onSave={expense => {
               this.addExpense(expense);
             }}
           />

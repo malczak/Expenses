@@ -7113,6 +7113,11 @@ rc@^1.0.1, rc@^1.1.6, rc@^1.2.7, rc@^1.2.8:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
+react-daypicker@^3.0.9:
+  version "3.0.9"
+  resolved "https://registry.yarnpkg.com/react-daypicker/-/react-daypicker-3.0.9.tgz#d10b3a144467054a2321f68e14cb06096cf40600"
+  integrity sha512-XwVq87CwWQ3ESMLehl2OqIOEAdl8aPI++XUmQevg05ik5EBnuHzeT650hd69IXl/YE58luyWU8MvlYxkEY41Ug==
+
 react-dom@^16.4.2:
   version "16.9.0"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-16.9.0.tgz#5e65527a5e26f22ae3701131bcccaee9fb0d3962"

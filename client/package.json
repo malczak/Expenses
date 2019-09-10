@@ -24,6 +24,7 @@
     "mobx-react-devtools": "^6.0.3",
     "moment": "^2.22.2",
     "react": "^16.4.2",
+    "react-daypicker": "^3.0.9",
     "react-dom": "^16.4.2",
     "tocca": "^2.0.4"
   },

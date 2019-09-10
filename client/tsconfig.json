@@ -18,7 +18,8 @@
     "paths": {
       "app/*": ["./src/*"],
       "cents": ["./@types/cents"],
-      "tocca": ["./@types/tocca"]
+      "tocca": ["./@types/tocca"],
+      "react-daypicker": ["./@types/react-daypicker"]
     }
   },
   "include": ["./src/**/*"]

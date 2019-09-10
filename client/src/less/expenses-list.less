@@ -167,29 +167,18 @@
     }
 
     & .expenses-stats {
-        max-width: 80%;
+        & > ul {
+            list-style: none;
+        }
         margin: 0 auto;
-        list-style: none;
     }
 
-    & .expenses-stats__item {
-        display: flex;
-        flex-direction: row;
-         > span {
-            width: 50%;
-            &:first-child {
-                text-align: right;
-            }
-            &:last-child {
-                flex-grow: 0;
-                width: auto;
-                text-align: left;
-                margin-left: 0.2em;
-            }
-         }
+    & .expenses-stats__header {
+        padding: 1em 0.5em;
+        text-align: center;
+        border-top: 1px solid #efefef;
+        background: #efefef;
+        border-bottom: 2px solid #ffffff;
     }
 
-    & .expenses-stats__itemvalue {
-
-    }
 }

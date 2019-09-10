@@ -133,8 +133,13 @@ export class AppStore {
       throw new Error('Expenses not available');
     }
 
-    expense.date = new Date();
-    expense.user = this.user.name;
+    if (!expense.date) {
+      expense.date = new Date();
+    }
+
+    if (!expense.user) {
+      expense.user = this.user.name;
+    }
 
     const data = this.expenses.value;
 

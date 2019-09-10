@@ -2,9 +2,22 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
     padding: 0.5em;
     border-bottom: 1px solid #efefef;
     text-align: center;
+
+    & .navigation-bar--lg {
+        font-size: 1.1em;
+    }
+
+    & .navigation-bar--bold {
+        font-weight: bold;
+    }
+
+    & .navigation-bar--hidden {
+        display: none;
+    }
 
     & .navigation-bar__button {
         display: flex;

@@ -1,8 +1,7 @@
 import React from 'react';
-import { MoneyPad } from 'app/views/components/MoneyPad';
 import { StoreProps } from 'app/stores/AppStore';
-import { ChevronLeft, UploadIcon } from '../components/MoneyPad/icons';
 import { Expense } from 'app/models/Expense';
+import { CreateExpenseView } from './CreateView';
 
 type EditExpenseViewProps = {
   expense: Expense;
@@ -16,21 +15,21 @@ export class EditExpenseView extends React.PureComponent<
   EditExpenseViewProps & StoreProps,
   EditExpenseViewState
 > {
-  private moneypad = React.createRef<MoneyPad>();
+  private view = React.createRef<CreateExpenseView>();
 
   // -----------------------
   // Handlers
   // -----------------------
   onSave = () => {
-    const moneypad = this.moneypad.current;
-    if (!moneypad) {
+    const view = this.view.current;
+    if (!view) {
       return;
     }
 
     const { onSave } = this.props;
     if (typeof onSave === 'function') {
       const existingExpense = this.props.expense;
-      const expense = moneypad.createExpense(existingExpense.clone());
+      const expense = view.createExpense(existingExpense.clone());
       onSave(expense);
     }
   };
@@ -41,29 +40,15 @@ export class EditExpenseView extends React.PureComponent<
   render() {
     const { expense } = this.props;
     return (
-      <div className="screen-view">
-        <div className="navigation-bar">
-          <button
-            className="navigation-bar__button"
-            onClick={() => this.props.onCancel()}
-          >
-            <ChevronLeft /> Anuluj
-          </button>
-          <button
-            className="navigation-bar__button navigation-bar__button--reverse"
-            onClick={this.onSave}
-          >
-            <UploadIcon /> Zapisz
-          </button>
-        </div>
-        <MoneyPad
-          ref={this.moneypad}
-          amount={expense.amount.cents}
-          description={expense.description}
-          category={expense.category}
-          onCreate={this.onSave}
-        />
-      </div>
+      <CreateExpenseView
+        ref={this.view}
+        amount={expense.amount.cents}
+        description={expense.description}
+        category={expense.category}
+        date={expense.date}
+        onSave={this.onSave}
+        onCancel={this.props.onCancel}
+      />
     );
   }
 }

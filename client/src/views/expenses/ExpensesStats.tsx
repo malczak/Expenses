@@ -2,9 +2,7 @@ import React from 'React';
 import accounting from 'accounting';
 import { Expense } from 'app/models/Expense';
 import Money from 'cents';
-
-const capitalize = (str: string) =>
-  `${str.substr(0, 1).toUpperCase()}${str.substring(1).toLowerCase()}`;
+import { capitalize } from 'app/utils/string';
 
 const moneyFormatter = (money: Money) =>
   accounting.formatMoney(money.toFixed(), { format: '%v' });
@@ -40,26 +38,38 @@ type StatsItem = {
   value: Money;
 };
 
+type Stats = {
+  grandTotal: Money;
+  items: StatsItem[];
+};
+
 type ExpensesStatsProps = {
   expenses: Expense[];
 };
 
 export class ExpensesStats extends React.Component<ExpensesStatsProps> {
-  getExpenseStats(): StatsItem[] {
-    let result = [] as StatsItem[];
+  getExpenseStats(): Stats {
+    let items = [] as StatsItem[];
     const expenses = this.props.expenses;
 
-    result = result.concat(
+    const grandTotal = expenses.reduce((sum: Money, expense: Expense) => {
+      return sum.add(expense.amount);
+    }, Money.cents(0));
+
+    items = items.concat(
       mapByStats(expenses, expense =>
         (expense.category || 'Brak').toLowerCase()
       )
     );
 
-    result = result.concat(
+    items = items.concat(
       mapByStats(expenses, expense => expense.user.toLowerCase())
     );
 
-    return result;
+    return {
+      grandTotal,
+      items
+    };
   }
 
   // -----------------------
@@ -68,16 +78,37 @@ export class ExpensesStats extends React.Component<ExpensesStatsProps> {
   render() {
     const stats = this.getExpenseStats();
     return (
-      <ul className="expenses-stats">
-        {stats.map(stat => (
-          <li className="expenses-stats__item">
-            <span>{capitalize(stat.name)}</span>
-            <span className="expenses-stats__itemvalue">
-              {moneyFormatter(stat.value)}
+      <div className="expenses-stats">
+        <div className="expenses-stats__header">
+          <div>Podsumowanie</div>
+          <div>
+            <span>
+              <strong>{moneyFormatter(stats.grandTotal)}</strong>
             </span>
-          </li>
-        ))}
-      </ul>
+            <small>zł</small>
+          </div>
+        </div>
+        <ul>
+          {stats.items.map(stat => (
+            <li className="expenses-item">
+              <div className="expense-item__content">
+                {/* <div className="expense-item__header">
+                <div className="expense-item__time">Podsumowanie</div>
+              </div> */}
+                <div className="expense-item__data">
+                  <div className="expense-item__desc">
+                    {capitalize(stat.name)}
+                  </div>
+                  <div className="expense-item__amount">
+                    <span>{moneyFormatter(stat.value)}</span>
+                    <small>zł</small>
+                  </div>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
     );
   }
 }
