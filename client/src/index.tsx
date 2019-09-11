@@ -24,6 +24,16 @@ const render = (Component: React.ComponentClass) => {
   );
 };
 
+// TODO: Skip due to cache issues
+/*
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker
+    .register('/worker.js')
+    .then(function(reg) {})
+    .catch(function(err) {});
+}
+*/
+
 render(App);
 
 if (module.hot) {

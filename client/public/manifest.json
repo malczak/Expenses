@@ -1,0 +1,21 @@
+{
+  "background_color": "#ffffff",
+  "categories": ["money", "savings", "expenses"],
+  "description": "Private expense tracking for people.",
+  "orientation": "portrait-primary",
+  "start_url": "/",
+  "name": "Expenses",
+  "short_name": "Expenses",
+  "theme_color": "#ffffff",
+  "display": "standalone",
+  "serviceworker": {
+    "src": "./worker.js"
+  },
+  "icons": [
+    {
+      "src": "/public/appicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

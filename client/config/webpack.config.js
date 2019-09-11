@@ -96,7 +96,8 @@ module.exports = function(env = {}) {
 
     let webpackConfig = {
         entry: {
-            app: paths.appIndexJs
+            app: paths.appIndexJs,
+            worker: paths.workerIndexJs
         },
         resolve: {
             extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],

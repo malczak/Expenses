@@ -4,12 +4,13 @@ const { execSync } = require("child_process");
 const { readFiles, withLowercaseKeys, getPaths } = require("./utils");
 
 const Const = {
-  allowedExtensions: ["html", "js", "css", "png"],
+  allowedExtensions: ["html", "js", "css", "png", "json"],
   contentTypes: {
     html: "text/html",
     js: "text/javascript",
     css: "text/css",
-    png: "image/png"
+    png: "image/png",
+    json: "application/json"
   }
 };
 

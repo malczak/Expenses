@@ -4,6 +4,9 @@ const path = require('path');
 const webpack = require('webpack');
 const merge = require('webpack-merge');
 
+// Plugins
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+
 module.exports = function(commonConfig, opts = {}) {
     const { paths } = opts;
     const package = require(paths.appPackageJson);
@@ -28,7 +31,8 @@ module.exports = function(commonConfig, opts = {}) {
         output: {
             path: path.join(paths.appBuild, 'dev'),
             filename: '[name].js',
-            publicPath: '/'
+            publicPath: '/',
+            globalObject: 'this'
         },
         devtool: 'source-map',
         devServer: Object.assign(
@@ -37,7 +41,7 @@ module.exports = function(commonConfig, opts = {}) {
                 compress: true,
                 historyApiFallback: true,
                 hot: true,
-                contentBase: path.join(paths.appBuild, 'dev'),
+                contentBase: paths.appDirectory,
                 https: {
                     key: fs.readFileSync(paths.appSSLKey),
                     cert: fs.readFileSync(paths.appSSLCert)

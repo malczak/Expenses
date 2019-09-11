@@ -34,11 +34,15 @@ module.exports = function(commonConfig, opts = {}) {
             new webpack.NamedChunksPlugin(),
             new CleanWebpackPlugin([path.resolve(__dirname, `env-${stage}`)]),
             new webpack.EnvironmentPlugin({ APP_STAGE: 'development' })
-            // new MiniCssExtractPlugin({ filename: '[name].css' })
         ],
         output: {
             path: path.resolve(__dirname, `env-${stage}`),
-            filename: '[name].[chunkhash].js'
+            filename: chunkData => {
+                console.log(`******* ${chunkData.chunk}`);
+                return chunkData.chunk.name === 'worker'
+                    ? '[name].js'
+                    : '[name].[chunkhash].js';
+            }
         }
     });
 

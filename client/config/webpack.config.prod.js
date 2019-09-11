@@ -70,7 +70,12 @@ module.exports = function(commonConfig, opts = {}) {
         ],
         output: {
             path: path.resolve(paths.appBuild, `env-${stage}`),
-            filename: '[name].[chunkhash].js'
+            chunkFilename: '[name].[chunkhash].js',
+            filename: chunkData => {
+                return chunkData.chunk.name === 'worker'
+                    ? '[name].js'
+                    : '[name].[chunkhash].js';
+            }
         }
     });
 
