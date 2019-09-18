@@ -1,6 +1,6 @@
 import moment from 'moment';
 
-export type TypePeriodDelta = {
+export type TimePeriodDelta = {
   value: number;
   key: 'day' | 'week' | 'month' | 'year';
 };
@@ -8,12 +8,12 @@ export type TypePeriodDelta = {
 export type TimePeriod = {
   begin: Date;
   end: Date;
-  delta: TypePeriodDelta;
+  delta: TimePeriodDelta;
 };
 
 const offsetDate = (
   date: Date,
-  delta: TypePeriodDelta,
+  delta: TimePeriodDelta,
   direction: 'future' | 'past'
 ) =>
   moment(date)
@@ -56,26 +56,30 @@ export function createDayPeriod(date: Date): TimePeriod {
 
 export const createTodayPeriod = () => createDayPeriod(new Date());
 
-export const createThisWeekPeriod = () => {
+export const createSpanPeriod = (span: 'day' | 'week' | 'month' | 'year') => {
   const date = new Date();
   return createPeriod(
     moment(date)
-      .startOf('week')
+      .startOf(span)
       .toDate(),
     moment(date)
-      .endOf('week')
+      .endOf(span)
       .toDate(),
     {
       value: 1,
-      key: 'week'
+      key: span
     }
   );
 };
 
+export const createThisWeekPeriod = () => createSpanPeriod('week');
+
+export const createThisMonthPeriod = () => createSpanPeriod('month');
+
 export function createPeriod(
   begin: Date,
   end: Date,
-  delta: TypePeriodDelta
+  delta: TimePeriodDelta
 ): TimePeriod {
   return {
     begin: moment(begin)

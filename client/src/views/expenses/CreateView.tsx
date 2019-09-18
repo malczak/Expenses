@@ -74,7 +74,6 @@ export class CreateExpenseView extends React.PureComponent<
           s: oldDate.getSeconds()
         })
         .toDate();
-      console.log(date, newDate);
       this.setState({ date: newDate });
     }
   };
@@ -102,12 +101,14 @@ export class CreateExpenseView extends React.PureComponent<
             >
               Anuluj
             </button>
-            <button
-              className="navigation-bar--lg navigation-bar--bold"
-              onClick={this.hideDatePicker}
-            >
-              {moment(this.state.date).format('LL')}
-            </button>
+            <div className="navigation-bar__title">
+              <button
+                className="navigation-bar--lg navigation-bar--bold"
+                onClick={this.hideDatePicker}
+              >
+                {moment(this.state.date).format('LL')}
+              </button>
+            </div>
             <button
               className="navigation-bar__button navigation-bar__button--reverse"
               onClick={this.hideDatePicker}
@@ -123,12 +124,14 @@ export class CreateExpenseView extends React.PureComponent<
             >
               <ChevronLeft /> Anuluj
             </button>
-            <button
-              className="navigation-bar--lg"
-              onClick={this.showDatePicker}
-            >
-              {moment(this.state.date).format('LL')}
-            </button>
+            <div className="navigation-bar__title">
+              <button
+                className="navigation-bar--lg"
+                onClick={this.showDatePicker}
+              >
+                {moment(this.state.date).format('LL')}
+              </button>
+            </div>
             <button
               className="navigation-bar__button navigation-bar__button--reverse"
               onClick={this.onCreate}

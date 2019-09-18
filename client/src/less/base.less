@@ -128,3 +128,39 @@ body input, body textarea, body select {
         background: darken(@blue, 10%)
     }
 }
+
+.dropDown {
+    position: relative;
+
+    &.dropDown--opened .dropDown__content {
+        display: block;
+    }
+
+    & .dropDown__content {
+        display: none;
+        position: absolute;
+        min-width: 100%;
+        padding: 1em;
+        left: 50%;
+        margin-left: -75%;
+        background: #ffffff;
+        border-radius: 0.2em;
+        border: 1px solid #efefef;
+    }
+
+    & ul.dropDown__content {
+        list-style: none;
+    }
+
+    & .dropDown__item {
+        padding: 0.5em 0;
+        &.dropDown__item--selected {
+            background: #efefef;
+        }
+    }
+
+    & .dropDown__item:hover {
+        background: #eeeeee;
+    }
+
+}

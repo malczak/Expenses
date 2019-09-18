@@ -2,19 +2,30 @@ import React from 'react';
 import moment from 'moment';
 import Tocca from 'tocca';
 import { inject, observer } from 'mobx-react';
-import { StoreProps } from 'app/stores/AppStore';
-import { ChevronLeft, ChevronRight } from '../components/MoneyPad/icons';
+import capitalize from 'lodash.capitalize';
 import Money from 'cents';
+
+import { StoreProps } from 'app/stores/AppStore';
+import { Expense } from 'app/models/Expense';
+import { DropDown } from 'app/views/components/Dropdown';
+import { ChevronLeft, ChevronRight } from 'app/views/components/MoneyPad/icons';
+
 import {
   getNextPeriod,
   getPrevPeriod,
   isSingleDayPeriod
 } from 'app/utils/Time';
+
 import { DayExpenses, ExpansesList } from './ExpansesList';
 import { ExpensesStats } from './ExpensesStats';
-import { Expense } from 'app/models/Expense';
 
 const $TOCCA = Tocca;
+
+const StatOptions = [
+  { value: 'day', label: 'Dzienny' },
+  { value: 'week', label: 'Tygodniowy' },
+  { value: 'month', label: 'Miesieczny' }
+];
 
 type ListExpensesProps = {
   onExpenseEdit: (expense: Expense) => void;
@@ -29,6 +40,21 @@ export class ListExpensesView extends React.Component<
   // -----------------------
   // Handlers
   // -----------------------
+  onPeriodSelect = (id: string, close: () => void) => {
+    switch (id) {
+      case 'day':
+        this.props.appStore.$fetchTodaysExpenses();
+        break;
+      case 'week':
+        this.props.appStore.$fetchWeekExpenses();
+        break;
+      case 'month':
+        this.props.appStore.$fetchMonthExpenses();
+        break;
+    }
+    close();
+  };
+
   onDayRefresh = (day: DayExpenses) => {
     this.props.appStore.$fetchPeriodExpenses(this.props.appStore.period);
   };
@@ -122,15 +148,20 @@ export class ListExpensesView extends React.Component<
             {prevDate.format('D/MM')}
           </button>
 
-          {isSingleDay ? (
-            <button onClick={() => this.props.appStore.$fetchWeekExpenses()}>
-              Statystyki tygodnia
-            </button>
-          ) : (
-            <button onClick={() => this.props.appStore.$fetchTodaysExpenses()}>
-              Raport dzienny
-            </button>
-          )}
+          <div className="navigation-bar__title">
+            <DropDown
+              title={(value: string | null): string =>
+                value
+                  ? capitalize(
+                      StatOptions.find(option => option.value == value).label
+                    )
+                  : 'Wybierz'
+              }
+              options={StatOptions}
+              selected={StatOptions[0].value}
+              onChange={this.onPeriodSelect}
+            />
+          </div>
 
           {!nextDateInFuture && (
             <button

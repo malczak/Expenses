@@ -18,7 +18,8 @@ import {
   TimePeriod,
   timePeriodsAreEqual,
   createTodayPeriod,
-  createThisWeekPeriod
+  createThisWeekPeriod,
+  createThisMonthPeriod
 } from 'app/utils/Time';
 
 const LCUserKey = '$user';
@@ -282,6 +283,10 @@ export class AppStore {
     return this.client
       .mutate(DeleteExpense, { id: expense.id })
       .then((data: ExpenseType) => Expense.fromGQL(data));
+  }
+
+  $fetchMonthExpenses(): Promise<Expense[]> {
+    return this.$fetchPeriodExpenses(createThisMonthPeriod());
   }
 
   $fetchWeekExpenses(): Promise<Expense[]> {
