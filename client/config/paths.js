@@ -25,7 +25,6 @@ module.exports = stage => {
             'public/index.html'
         ),
         appIndexJs: resolvePath('src/index.tsx'),
-        workerIndexJs: resolvePath('src/worker.ts'),
         appPackageJson: resolvePath('package.json'),
         appSrc: resolvePath('src'),
         appNodeModules: resolvePath('node_modules'),

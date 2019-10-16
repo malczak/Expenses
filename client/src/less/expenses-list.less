@@ -17,7 +17,7 @@
 
     & .expenses-item {
         position: relative;
-        border-bottom: 1px solid #efefef;
+        border-bottom: 1px solid var(--secondary-bg-color);
     }
 
     & .expenses-item--closed .expense-item__content {
@@ -25,13 +25,13 @@
     }
 
     & .expenses-item--opened .expense-item__content {
-        background: #eeeeee;
+        background: var(--bg-gray-color);
         transform: translate(-@actions-width, 0);
     }
 
     & .expense-item__content {
         position: relative;
-        background: #fefefe;
+        background: var(--bg-lighter-color);
         padding: 0.75em;
         -webkit-transition: transform @open-animation-time ease-out, background @open-animation-time ease-out;
 	    -moz-transition: transform @open-animation-time ease-out, background @open-animation-time ease-out;
@@ -86,7 +86,7 @@
         font-size: 1.4rem;
         padding: 0.5em;
         text-align: center;
-        background: #efefef;
+        background: var(--secondary-bg-color);
     }
 
     & .expenses-day__refresh {
@@ -113,15 +113,15 @@
 
         &:active {
             border-radius: 2px;
-            background: white;
+            background: clear;
         }
     }
 
     & .expenses-day__summary {
         padding: 1em 0.5em;
-        border-top: 1px solid #efefef;
-        background: #efefef;
-        border-bottom: 2px solid #ffffff;
+        border-top: 1px solid var(--secondary-bg-color);
+        background: var(--secondary-bg-color);
+        border-bottom: 2px solid var(--bg-color);
     }
 
     & .expenses-day__summary__amount {
@@ -176,9 +176,9 @@
     & .expenses-stats__header {
         padding: 1em 0.5em;
         text-align: center;
-        border-top: 1px solid #efefef;
-        background: #efefef;
-        border-bottom: 2px solid #ffffff;
+        border-top: 1px solid var(--bg-color);
+        background: var(--bg-color);
+        border-bottom: 2px solid var(--bg-color);
     }
 
 }

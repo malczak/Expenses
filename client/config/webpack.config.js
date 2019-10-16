@@ -8,6 +8,7 @@ const autoprefixer = require('autoprefixer');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const { GenerateSW } = require('workbox-webpack-plugin');
 
 // Git Info
 const gitCommit = execSync('git log --format="%H" -n 1')
@@ -96,8 +97,7 @@ module.exports = function(env = {}) {
 
     let webpackConfig = {
         entry: {
-            app: paths.appIndexJs,
-            worker: paths.workerIndexJs
+            app: paths.appIndexJs
         },
         resolve: {
             extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
@@ -187,12 +187,15 @@ module.exports = function(env = {}) {
                     to: path.resolve(paths.appBuild, `env-${stage}`)
                 }
             ]),
+
             new HtmlWebpackPlugin({
                 template: paths.appHtml,
                 inject: true
             }),
+
             new webpack.DefinePlugin({
                 'process.env': {
+                    SW_PATH: JSON.stringify('service-worker-expenses.js'),
                     BROWSER: JSON.stringify(true),
                     config: JSON.stringify(clientConfig),
                     version: JSON.stringify({
@@ -203,6 +206,7 @@ module.exports = function(env = {}) {
                     })
                 }
             }),
+
             new webpack.ProvidePlugin({
                 inject: ['mobx-react', 'inject'],
                 observer: ['mobx-react', 'observer'],
@@ -211,8 +215,31 @@ module.exports = function(env = {}) {
                 computed: ['mobx', 'computed'],
                 React: 'react'
             }),
+
+            new GenerateSW({
+                swDest: 'service-worker-expenses.js',
+                skipWaiting: true,
+                clientsClaim: true,
+                cacheId: 'expenses',
+                exclude: [/\.map$/, /\.html$/],
+                dontCacheBustURLsMatching: /\.\w{8,}\./,
+                runtimeCaching: [
+                    {
+                        urlPattern: /\.(js|css|png|jpg|gif|svg|mp4|mp3|cur)$/,
+                        handler: 'CacheFirst',
+                        options: {
+                            cacheableResponse: {
+                                statuses: [0, 200]
+                            }
+                        }
+                    }
+                ]
+            }),
+
             new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
-            new MiniCssExtractPlugin({ filename: '[name].css' }),
+
+            new MiniCssExtractPlugin({ filename: '[name].[chunkhash].css' }),
+
             new WebpackBuildNotifierPlugin({
                 title: `${package.name} @ ${stage}`
             })

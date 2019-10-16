@@ -15,6 +15,13 @@ configure({ enforceActions: 'observed', isolateGlobalState: true });
 
 moment.locale('pl');
 
+// Register service worker
+if ('serviceWorker' in navigator) {
+  //   const sw_url = __webpack_public_path__ + process.env.SW_PATH;
+  const sw_url = process.env.SW_PATH;
+  navigator.serviceWorker.register(sw_url);
+}
+
 const render = (Component: React.ComponentClass) => {
   ReactDOM.render(
     <AppContainer>
@@ -23,16 +30,6 @@ const render = (Component: React.ComponentClass) => {
     document.getElementById('root')
   );
 };
-
-// TODO: Skip due to cache issues
-/*
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker
-    .register('/worker.js')
-    .then(function(reg) {})
-    .catch(function(err) {});
-}
-*/
 
 render(App);
 

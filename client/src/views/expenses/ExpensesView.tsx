@@ -42,18 +42,37 @@ export class ExpenseView extends React.PureComponent<
   private el = React.createRef<HTMLDivElement>();
 
   // -----------------------
+  // Methods
+  // -----------------------
+  addClickToClose() {
+    const $el = this.el.current;
+    if ($el) {
+      $el.addEventListener('click', this.onSwipeRight);
+    }
+  }
+
+  removeClickToClose() {
+    const $el = this.el.current;
+    if ($el) {
+      $el.removeEventListener('click', this.onSwipeRight);
+    }
+  }
+
+  // -----------------------
   // Handlers
   // -----------------------
   onSwipeLeft = () => {
     const { opened } = this.state;
     if (!opened) {
       this.setState({ opened: true });
+      setTimeout(() => this.addClickToClose(), 200);
     }
   };
 
   onSwipeRight = () => {
     const { opened } = this.state;
     if (opened) {
+      this.removeClickToClose();
       this.setState({ opened: false });
     }
   };
@@ -67,7 +86,6 @@ export class ExpenseView extends React.PureComponent<
     if ($el) {
       $el.addEventListener('swipeleft', this.onSwipeLeft);
       $el.addEventListener('swiperight', this.onSwipeRight);
-      $el.addEventListener('click', this.onSwipeRight);
     }
   }
 
@@ -76,8 +94,8 @@ export class ExpenseView extends React.PureComponent<
     if ($el) {
       $el.removeEventListener('swipeleft', this.onSwipeLeft);
       $el.removeEventListener('swiperight', this.onSwipeRight);
-      $el.removeEventListener('click', this.onSwipeRight);
     }
+    this.removeClickToClose();
   }
 
   // -----------------------

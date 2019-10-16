@@ -3,6 +3,42 @@
 @red: #C2847A;
 @blue:  #97ADCE;
 
+:root {
+    --bg-color: #FFFFFF;
+    --bg-lighter-color: #fefefe;
+    --secondary-bg-color: #efefef;
+    --primary-hover-color: #DDDDDD;
+    --primary-active-color: #dadada;
+    --border-color: #ececec;
+    --primary-color: #444444;
+    --nav-bg-color: #FFFFFF;
+    --nav-border-color: #efefef;
+    --dropDown-bg-color: #FFFFFF;
+    --dropDown-selected-bg-color: #EFEFEF;
+    --dropDown-hover-bg-color: #eeeeee;
+    --dropDown-border-color: #efefef;
+    --bg-gray-color: #eeeeee;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root, [data-theme="dark"] {
+        --bg-color: #1E1E1E;
+        --bg-lighter-color: #1d1d1d;
+        --secondary-bg-color: #2f2f30;
+        --primary-hover-color: #1A1A1A;
+        --primary-active-color: #111111;
+        --border-color: #525252;
+        --primary-color: #CCCCCC;
+        --nav-bg-color: #1b1b1b;
+        --nav-border-color: #000000;
+        --dropDown-bg-color: #1b1b1b;
+        --dropDown-selected-bg-color: #000000;
+        --dropDown-hover-bg-color: #444444;
+        --dropDown-border-color: #000000;
+        --bg-gray-color: #444444;
+    }
+}
+
 /*** Reset CSS ***/
 * {
     margin: 0;
@@ -41,8 +77,8 @@ body, button, input {
     font-family: 'Montserrat';
     font-weight: 200;
     font-style: normal;
-    color: #444;
-    background: #fff;
+    color: var(--primary-color);
+    background: var(--bg-color);
 }
 
 button, input {
@@ -57,8 +93,8 @@ body select:focus, body select:focus-within  {
 }
 
 body textarea, body select {
-    border: 1px solid #ececec !important;
-    background: #ffffff !important;
+    border: 1px solid var(--border-color) !important;
+    background: var(--bg-color) !important;
 }
 
 body input, body textarea, body select {
@@ -83,7 +119,7 @@ body input, body textarea, body select {
     flex-direction: column;
     overflow: hidden;
     position: absolute;
-    background: #ffffff;
+    background: var(--bg-color);
 }
 
 .circle-icon-button {
@@ -93,14 +129,14 @@ body input, body textarea, body select {
     width: 64px;
     height: 64px;
     border-radius: 32px;
-    background: white;
+    background: var(--bg-color);
     box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
     transition: transform 0.2s;
     &:hover {
-        background: lighten(#76abe9, 25%);
+        background: var(--primary-hover-color);
     }
     &:active {
-        background: lighten(#76abe9, 20%);
+        background: var(--primary-active-color);
         transform: scale(0.9, 0.9);
     }
 }
@@ -143,9 +179,9 @@ body input, body textarea, body select {
         padding: 1em;
         left: 50%;
         margin-left: -75%;
-        background: #ffffff;
+        background: var(--dropDown-bg-color);
         border-radius: 0.2em;
-        border: 1px solid #efefef;
+        border: 1px solid var(--dropDown-border-color);
     }
 
     & ul.dropDown__content {
@@ -153,14 +189,18 @@ body input, body textarea, body select {
     }
 
     & .dropDown__item {
-        padding: 0.5em 0;
+        padding: 0.5em;
         &.dropDown__item--selected {
-            background: #efefef;
+            background: var(--dropDown-selected-bg-color);
         }
     }
 
     & .dropDown__item:hover {
-        background: #eeeeee;
+        background: var(--dropDown-hover-bg-color);
     }
 
+}
+
+.react-daypicker-root .day:hover:not(.empty) {
+    background-color: var(--bg-gray-color);
 }

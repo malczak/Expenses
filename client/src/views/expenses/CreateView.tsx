@@ -15,6 +15,7 @@ type CreateExpenseViewProps = {
   amount?: number;
   description?: string;
   category?: string;
+  actionLabel?: string;
   onSave: (expense: Expense) => void;
   onCancel: () => void;
 };
@@ -29,6 +30,10 @@ export class CreateExpenseView extends React.PureComponent<
   CreateExpenseViewState
 > {
   private moneypad = React.createRef<MoneyPad>();
+
+  static defaultProps: Partial<CreateExpenseViewProps> = {
+    actionLabel: 'Dodaj'
+  };
 
   constructor(props: CreateExpenseViewProps) {
     super(props);
@@ -91,6 +96,8 @@ export class CreateExpenseView extends React.PureComponent<
   // -----------------------
   render() {
     const isShowingPicker = this.state.showPicker;
+    const { actionLabel } = this.props;
+
     return (
       <div className="screen-view">
         {isShowingPicker ? (
@@ -106,7 +113,7 @@ export class CreateExpenseView extends React.PureComponent<
                 className="navigation-bar--lg navigation-bar--bold"
                 onClick={this.hideDatePicker}
               >
-                {moment(this.state.date).format('LL')}
+                {moment(this.state.date).format('L')}
               </button>
             </div>
             <button
@@ -129,14 +136,14 @@ export class CreateExpenseView extends React.PureComponent<
                 className="navigation-bar--lg"
                 onClick={this.showDatePicker}
               >
-                {moment(this.state.date).format('LL')}
+                {moment(this.state.date).format('L')}
               </button>
             </div>
             <button
               className="navigation-bar__button navigation-bar__button--reverse"
               onClick={this.onCreate}
             >
-              <UploadIcon /> Dodaj
+              <UploadIcon /> {actionLabel}
             </button>
           </div>
         )}

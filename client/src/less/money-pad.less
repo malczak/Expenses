@@ -27,8 +27,6 @@
     & .categories_slider {
         display: flex;
         flex-direction: row;
-        // align-items: center;
-        // justify-content: center;
         flex-wrap: nowrap;
         overflow-y: hidden;
         overflow-x: scroll;
@@ -74,8 +72,8 @@
             padding: 0.4rem;
             text-align: right;
             font-size: 1.8em;
-            border-top: 1px solid #ececec;
-            border-bottom: 1px solid #ececec;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
 
             &:focus {
                 border-bottom: 1px solid #0FACF3 !important;
@@ -107,11 +105,11 @@
             }
 
             & > button:hover {
-                background: #f8f8f8;
+                background: var(--primary-hover-color);
             }
 
             & > button:active {
-                background: #efefef;
+                background: var(--primary-active-color);
             }
 
         }

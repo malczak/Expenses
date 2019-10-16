@@ -42,6 +42,7 @@ export class EditExpenseView extends React.PureComponent<
     return (
       <CreateExpenseView
         ref={this.view}
+        actionLabel="Zapisz"
         amount={expense.amount.cents}
         description={expense.description}
         category={expense.category}
