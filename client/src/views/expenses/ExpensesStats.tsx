@@ -3,6 +3,27 @@ import accounting from 'accounting';
 import { Expense } from 'app/models/Expense';
 import Money from 'cents';
 import { capitalize } from 'app/utils/string';
+import { ChevronRight } from '../components/MoneyPad/icons';
+import { Users } from 'app/data';
+
+type StatItem = {
+  name: string;
+  value: Money;
+};
+
+type StatsItem = StatItem & {
+  items: Expense[];
+  users: StatItem[];
+};
+
+type Stats = {
+  grandTotal: Money;
+  items: StatsItem[];
+};
+
+type ExpensesStatsProps = {
+  expenses: Expense[];
+};
 
 const moneyFormatter = (money: Money) =>
   accounting.formatMoney(money.toFixed(), { format: '%v' });
@@ -15,15 +36,29 @@ function mapByStats(
 
   for (const expense of expenses) {
     const statId = getExpenseStatId(expense);
+
     let statInfo = statsMap.get(statId);
     if (!statInfo) {
       statInfo = {
         name: statId,
-        value: Money.cents(0)
+        value: Money.cents(0),
+        items: [],
+        users: []
       } as StatsItem;
       statsMap.set(statId, statInfo);
     }
     statInfo.value = statInfo.value.add(expense.amount);
+    statInfo.items.push(expense);
+
+    let userInfo = statInfo.users.find(item => item.name == expense.user);
+    if (!userInfo) {
+      userInfo = {
+        name: expense.user,
+        value: Money.cents(0)
+      };
+      statInfo.users.push(userInfo);
+    }
+    userInfo.value = userInfo.value.add(Money.from(expense.amount));
   }
 
   const categoryStats = [...statsMap.values()].filter(
@@ -33,18 +68,44 @@ function mapByStats(
   return categoryStats.sort((a, b) => (a.value.greaterThan(b.value) ? -1 : 1));
 }
 
-type StatsItem = {
-  name: string;
-  value: Money;
-};
+const Bar: React.FC<{ items: StatItem[]; [key: string]: any }> = ({
+  items,
+  ...others
+}) => {
+  const distribution = [];
+  const sum = Money.cents(0);
+  for (const item of items) {
+    let upper = sum.add(item.value);
+    distribution.push({
+      name: item.name,
+      lower: sum.cents,
+      upper: upper.cents
+    });
+    sum.set(upper);
+  }
 
-type Stats = {
-  grandTotal: Money;
-  items: StatsItem[];
-};
-
-type ExpensesStatsProps = {
-  expenses: Expense[];
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox={`0 0 ${sum.cents} 20`}
+      preserveAspectRatio="none"
+      {...others}
+    >
+      {distribution.map(item => {
+        const user = Users.find(user => user.name == item.name);
+        return (
+          <rect
+            key={item.name}
+            x={item.lower}
+            y="0"
+            width={item.upper - item.lower}
+            height="100%"
+            fill={user.color}
+          />
+        );
+      })}
+    </svg>
+  );
 };
 
 export class ExpensesStats extends React.Component<ExpensesStatsProps> {
@@ -103,6 +164,23 @@ export class ExpensesStats extends React.Component<ExpensesStatsProps> {
                     <span>{moneyFormatter(stat.value)}</span>
                     <small>zł</small>
                   </div>
+                  <ChevronRight />
+                </div>
+                <div className="expense-item__footer">
+                  <small>
+                    {stat.users.map(userStat => (
+                      <small className="mr-2">
+                        {userStat.name}:&nbsp;
+                        <span>
+                          <strong>
+                            {moneyFormatter(userStat.value).replace(' ', ' ')}
+                          </strong>
+                          zł
+                        </span>
+                      </small>
+                    ))}
+                  </small>
+                  <Bar width="100%" height={4} items={stat.users} />
                 </div>
               </div>
             </li>

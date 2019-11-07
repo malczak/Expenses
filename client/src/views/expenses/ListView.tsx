@@ -181,13 +181,13 @@ export class ListExpensesView extends React.Component<
           ) : (
             expenses.isAvailable && (
               <>
+                {showStats && <ExpensesStats expenses={expenses.value} />}
                 <ExpansesList
                   expenses={groupedExpenses}
                   onExpenseEdit={this.props.onExpenseEdit}
                   onExpenseDelete={this.props.onExpenseDelete}
                   onDayRefresh={this.onDayRefresh}
                 />
-                {showStats && <ExpensesStats expenses={expenses.value} />}
               </>
             )
           )}
