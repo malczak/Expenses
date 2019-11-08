@@ -8,7 +8,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "watch": "webpack-dev-server --hot --config config/webpack.config.js --env.stage=local",
+    "watch": "webpack-dev-server --hot --config config/webpack.config.js --env.stage=dev",
     "build": "webpack --config config/webpack.config.js"
   },
   "dependencies": {

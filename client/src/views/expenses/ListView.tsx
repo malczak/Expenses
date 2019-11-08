@@ -3,7 +3,6 @@ import moment from 'moment';
 import Tocca from 'tocca';
 import { inject, observer } from 'mobx-react';
 import capitalize from 'lodash.capitalize';
-import Money from 'cents';
 
 import { StoreProps } from 'app/stores/AppStore';
 import { Expense } from 'app/models/Expense';
@@ -16,7 +15,9 @@ import {
   isSingleDayPeriod
 } from 'app/utils/Time';
 
-import { DayExpenses, ExpansesList } from './ExpansesList';
+import { DayExpenses, createDayExpenses } from 'app/utils/Expenses';
+
+import { ExpansesList } from './ExpansesList';
 import { ExpensesStats } from './ExpensesStats';
 
 const $TOCCA = Tocca;
@@ -76,36 +77,7 @@ export class ListExpensesView extends React.Component<
     const expenses = this.props.appStore.expenses;
     if (!expenses || !expenses.isAvailable) return [];
 
-    const dayExpensesMap = expenses.value.reduce((map, expense) => {
-      const expenseDate = moment(expense.date);
-      const dayStr = expenseDate.format('DDMMYY');
-
-      let dayExpenses: DayExpenses = map.get(dayStr);
-      if (!dayExpenses) {
-        dayExpenses = {
-          id: dayStr,
-          date: expenseDate.startOf('day').toDate(),
-          total: Money.cents(0),
-          expenses: []
-        };
-        map.set(dayStr, dayExpenses);
-      }
-
-      dayExpenses.expenses.push(expense);
-      dayExpenses.total = dayExpenses.total.add(expense.amount);
-
-      return map;
-    }, new Map<string, DayExpenses>());
-
-    const dayExpenses = [...dayExpensesMap.values()];
-
-    if (dayExpenses.length > 1) {
-      return dayExpenses.sort((a, b) =>
-        a.date.getTime() < b.date.getTime() ? -1 : 1
-      );
-    }
-
-    return dayExpenses;
+    return createDayExpenses(expenses.value);
   }
 
   // -----------------------

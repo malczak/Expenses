@@ -1,10 +1,12 @@
 import React from 'React';
+import { inject } from 'mobx-react';
 import accounting from 'accounting';
+import { Users } from 'app/data';
 import { Expense } from 'app/models/Expense';
 import Money from 'cents';
 import { capitalize } from 'app/utils/string';
-import { ChevronRight } from '../components/MoneyPad/icons';
-import { Users } from 'app/data';
+import { ChevronRight, ChevronLeft } from '../components/MoneyPad/icons';
+import { StoreProps } from 'app/stores/AppStore';
 
 type StatItem = {
   name: string;
@@ -108,7 +110,10 @@ const Bar: React.FC<{ items: StatItem[]; [key: string]: any }> = ({
   );
 };
 
-export class ExpensesStats extends React.Component<ExpensesStatsProps> {
+@inject('appStore')
+export class ExpensesStats extends React.Component<
+  ExpensesStatsProps & StoreProps
+> {
   getExpenseStats(): Stats {
     let items = [] as StatsItem[];
     const expenses = this.props.expenses;
@@ -151,7 +156,10 @@ export class ExpensesStats extends React.Component<ExpensesStatsProps> {
         </div>
         <ul>
           {stats.items.map(stat => (
-            <li className="expenses-item">
+            <li
+              className="expenses-item"
+              onClick={() => this.props.appStore.tmp_setExpensesList(stat)}
+            >
               <div className="expense-item__content">
                 {/* <div className="expense-item__header">
                 <div className="expense-item__time">Podsumowanie</div>

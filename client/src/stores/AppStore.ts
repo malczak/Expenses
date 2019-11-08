@@ -43,6 +43,9 @@ export class AppStore {
   @observable.ref
   expenses: Loadable<Expense[]> = Loadable.empty();
 
+  @observable.ref
+  expensesGroup?: { name: string; items: Expense[] };
+
   processingPending = false;
 
   constructor() {
@@ -72,6 +75,11 @@ export class AppStore {
   // -----------------------
   // Actions
   // -----------------------
+
+  @action
+  tmp_setExpensesList(list?: { name: string; items: Expense[] }) {
+    this.expensesGroup = list;
+  }
 
   @action
   setUser(user?: User) {

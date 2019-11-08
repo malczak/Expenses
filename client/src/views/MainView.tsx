@@ -11,6 +11,9 @@ import { CreateExpenseView } from 'app/views/expenses/CreateView';
 import { EditExpenseView } from 'app/views/expenses/EditView';
 import { LoginView } from 'app/views/LoginView';
 import { Expense } from 'app/models/Expense';
+import { ChevronLeft } from './components/MoneyPad/icons';
+import { ExpansesList } from './expenses/ExpansesList';
+import { createDayExpenses } from 'app/utils/Expenses';
 
 const enum ViewMode {
   showList = 1,
@@ -79,6 +82,37 @@ class MainView extends React.Component<
   // -----------------------
   // Render
   // -----------------------
+  tmp_renderSelectedStat() {
+    let expensesGroup = this.props.appStore.expensesGroup;
+    if (!expensesGroup) {
+      return null;
+    }
+
+    return (
+      <div className="screen-view">
+        <div className="navigation-bar">
+          <button
+            className="navigation-bar__button"
+            onClick={() => this.props.appStore.tmp_setExpensesList(null)}
+          >
+            <ChevronLeft />
+            Back
+          </button>
+
+          <div className="navigation-bar__title">{expensesGroup.name}</div>
+        </div>
+        <div className="expenses-list">
+          <ExpansesList
+            expenses={createDayExpenses(expensesGroup.items)}
+            //   onExpenseEdit={this.props.onExpenseEdit}
+            //   onExpenseDelete={this.props.onExpenseDelete}
+            //   onDayRefresh={this.onDayRefresh}
+          />
+        </div>
+      </div>
+    );
+  }
+
   render() {
     const { busy } = this.state;
     if (busy) {
@@ -90,11 +124,14 @@ class MainView extends React.Component<
     }
 
     return (
-      <div className="screen-view">
+      <div className="root-view">
         <ListExpensesView
           onExpenseEdit={this.onExpenseEdit}
           onExpenseDelete={this.onExpenseDelete}
         />
+
+        {this.tmp_renderSelectedStat()}
+
         <AddExpenseButton
           onClick={() => this.setState({ mode: ViewMode.createExpense })}
         />

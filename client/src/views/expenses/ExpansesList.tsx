@@ -1,14 +1,7 @@
 import React from 'react';
 import { Expense } from 'app/models/Expense';
-import Money from 'cents';
 import { ExpensesView } from './ExpensesView';
-
-export type DayExpenses = {
-  id: string;
-  date: Date;
-  total: Money;
-  expenses: Expense[];
-};
+import { DayExpenses } from 'app/utils/Expenses';
 
 type ExpensesListProps = {
   expenses: DayExpenses[];
@@ -16,6 +9,7 @@ type ExpensesListProps = {
   onExpenseDelete?: (expense: Expense) => void;
   onDayRefresh?: (date: DayExpenses) => void;
 };
+
 type ExpensesListState = {
   expenses?: DayExpenses[];
   collapsedDays: string[];

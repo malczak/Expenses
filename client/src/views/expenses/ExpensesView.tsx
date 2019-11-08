@@ -3,7 +3,6 @@ import cn from 'classnames';
 import moment from 'moment';
 import accounting from 'accounting';
 
-import { DayExpenses } from './ExpansesList';
 import { Expense, ExpenseState } from 'app/models/Expense';
 import {
   ChevronDown,
@@ -14,6 +13,7 @@ import {
 } from '../components/MoneyPad/icons';
 import Money from 'cents';
 import { getCategoryByName } from 'app/data';
+import { DayExpenses } from 'app/utils/Expenses';
 
 const moneyFormatter = (money: Money) =>
   accounting.formatMoney(money.toFixed(), { format: '%v' });
