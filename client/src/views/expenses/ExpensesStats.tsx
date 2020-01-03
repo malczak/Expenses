@@ -14,6 +14,7 @@ type StatItem = {
 };
 
 type StatsItem = StatItem & {
+  uid: string;
   items: Expense[];
   users: StatItem[];
 };
@@ -42,6 +43,7 @@ function mapByStats(
     let statInfo = statsMap.get(statId);
     if (!statInfo) {
       statInfo = {
+        uid: `${statId}:${Date.now()}`,
         name: statId,
         value: Money.cents(0),
         items: [],
@@ -157,6 +159,7 @@ export class ExpensesStats extends React.Component<
         <ul>
           {stats.items.map(stat => (
             <li
+              key={stat.uid}
               className="expenses-item"
               onClick={() => this.props.appStore.tmp_setExpensesList(stat)}
             >
@@ -177,7 +180,7 @@ export class ExpensesStats extends React.Component<
                 <div className="expense-item__footer">
                   <small>
                     {stat.users.map(userStat => (
-                      <small className="mr-2">
+                      <small key={userStat.name} className="mr-2">
                         {userStat.name}:&nbsp;
                         <span>
                           <strong>

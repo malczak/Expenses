@@ -9,6 +9,29 @@ export type DayExpenses = {
   expenses: Expense[];
 };
 
+export type GroupedExpenses = {
+  id: string;
+  name: string;
+  total: Money;
+  expenses: Expense[];
+};
+
+export function groupExpenses(
+  expenses: Expense[],
+  name: string,
+  id?: string
+): GroupedExpenses {
+  let total = expenses.reduce((total, expense) => {
+    return total.add(expense.amount);
+  }, Money.cents(0));
+  return {
+    id: id || name,
+    name,
+    total,
+    expenses
+  };
+}
+
 export function createDayExpenses(expenses: Expense[]): DayExpenses[] {
   if (!expenses || !expenses.length) return [];
 

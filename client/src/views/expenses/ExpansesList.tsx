@@ -5,6 +5,8 @@ import { DayExpenses } from 'app/utils/Expenses';
 
 type ExpensesListProps = {
   expenses: DayExpenses[];
+  allowRefresh?: boolean;
+  allowCollapse?: boolean;
   onExpenseEdit?: (expense: Expense) => void;
   onExpenseDelete?: (expense: Expense) => void;
   onDayRefresh?: (date: DayExpenses) => void;
@@ -19,6 +21,8 @@ export class ExpansesList extends React.Component<
   ExpensesListProps,
   ExpensesListState
 > {
+  static defaultProps: { allowRefresh: true; allowCollapse: true };
+
   state: ExpensesListState = { collapsedDays: new Array<string>() };
 
   // -----------------------
@@ -76,16 +80,20 @@ export class ExpansesList extends React.Component<
   // Render
   // -----------------------
   render() {
-    const expenses = this.props.expenses;
-    const allowDayCollapse = expenses.length > 1;
+    const { expenses, allowRefresh, allowCollapse } = this.props;
+    const allowDayCollapse = allowCollapse && expenses.length > 1;
     return (
       <>
         {expenses.map(dayExpenses => (
           <ExpensesView
             key={dayExpenses.id}
             day={dayExpenses}
+            allowRefresh={allowRefresh}
             allowCollapse={allowDayCollapse}
-            collapsed={this.state.collapsedDays.includes(dayExpenses.id)}
+            collapsed={
+              allowDayCollapse &&
+              this.state.collapsedDays.includes(dayExpenses.id)
+            }
             onEdit={this.onEditExpense}
             onDelete={this.onDeleteExpense}
             onRefresh={this.props.onDayRefresh}

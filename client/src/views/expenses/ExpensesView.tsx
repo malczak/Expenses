@@ -187,6 +187,7 @@ export class ExpenseView extends React.PureComponent<
 
 export const ExpensesView: React.FC<{
   day: DayExpenses;
+  allowRefresh: boolean;
   allowCollapse: boolean;
   collapsed: boolean;
   onEdit: (expense: Expense) => void;
@@ -195,6 +196,7 @@ export const ExpensesView: React.FC<{
   onRefresh?: (date: DayExpenses) => void;
 }> = ({
   day,
+  allowRefresh,
   allowCollapse,
   collapsed,
   onEdit,
@@ -207,15 +209,15 @@ export const ExpensesView: React.FC<{
   return (
     <div className="expenses-day">
       <div className="expenses-day__header">
-        <button
-          className="expenses-day__refresh"
-          onClick={() => onRefresh(day)}
-        >
-          <Refresh />
-        </button>
-
+        {allowRefresh && (
+          <button
+            className="expenses-day__refresh"
+            onClick={() => onRefresh(day)}
+          >
+            <Refresh />
+          </button>
+        )}
         {moment(day.date).format('LL')}
-
         {allowCollapse && (
           <button
             className="expenses-day__collapse"

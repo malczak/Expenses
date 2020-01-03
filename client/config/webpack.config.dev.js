@@ -6,10 +6,10 @@ const merge = require('webpack-merge');
 
 // Plugins
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 module.exports = function(commonConfig, opts = {}) {
-    const { stage } = opts;
+    const { paths, stage } = opts;
 
     const webpackConfig = merge.smart(commonConfig, {
         mode: 'development',
@@ -32,11 +32,11 @@ module.exports = function(commonConfig, opts = {}) {
         plugins: [
             new webpack.NamedModulesPlugin(),
             new webpack.NamedChunksPlugin(),
-            new CleanWebpackPlugin([path.resolve(__dirname, `env-${stage}`)]),
+            new CleanWebpackPlugin(),
             new webpack.EnvironmentPlugin({ APP_STAGE: 'development' })
         ],
         output: {
-            path: path.resolve(__dirname, `env-${stage}`),
+            path: path.join(paths.appBuild, `env-${stage}`),
             filename: chunkData => {
                 console.log(`******* ${chunkData.chunk}`);
                 return chunkData.chunk.name === 'worker'

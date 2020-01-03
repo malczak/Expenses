@@ -14,6 +14,7 @@ import { Expense } from 'app/models/Expense';
 import { ChevronLeft } from './components/MoneyPad/icons';
 import { ExpansesList } from './expenses/ExpansesList';
 import { createDayExpenses } from 'app/utils/Expenses';
+import capitalize from 'lodash.capitalize';
 
 const enum ViewMode {
   showList = 1,
@@ -99,10 +100,14 @@ class MainView extends React.Component<
             Back
           </button>
 
-          <div className="navigation-bar__title">{expensesGroup.name}</div>
+          <div className="navigation-bar__title">
+            {capitalize(expensesGroup.name)}
+          </div>
         </div>
         <div className="expenses-list">
           <ExpansesList
+            allowCollapse={false}
+            allowRefresh={false}
             expenses={createDayExpenses(expensesGroup.items)}
             //   onExpenseEdit={this.props.onExpenseEdit}
             //   onExpenseDelete={this.props.onExpenseDelete}

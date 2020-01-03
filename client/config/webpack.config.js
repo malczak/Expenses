@@ -32,11 +32,18 @@ const endpoints = {
             server: require('../.config.json')
         }
     },
-    dev: {
+    localProd: {
         webpack: 'local',
         config: {
             env: 'local',
             server: require('../.config_prod.json')
+        }
+    },
+    dev: {
+        webpack: 'dev',
+        config: {
+            env: 'dev',
+            server: {}
         }
     },
     prod: {
