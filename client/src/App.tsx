@@ -9,14 +9,10 @@ import { AppStore } from './stores/AppStore';
 /**
  * Application container
  */
-class App extends React.Component {
-  render() {
-    return (
-      <Provider appStore={new AppStore()}>
-        <MainView />
-      </Provider>
-    );
-  }
-}
+const App = () => (
+  <Provider appStore={new AppStore()}>
+    <MainView />
+  </Provider>
+);
 
 export default App;

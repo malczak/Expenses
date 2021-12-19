@@ -22,7 +22,7 @@ custom:
 
 provider:
     name: aws
-    runtime: nodejs8.10
+    runtime: nodejs14.x
     variableSyntax: "\\${{([ ~:a-zA-Z0-9._@\\'\",\\-\\/\\(\\)]+?)}}" # notice the double quotes for yaml to ignore the escape characters!
     stage: ${{opt:stage,'dev'}}
     region: ${{opt:region, 'us-east-1'}}

@@ -5,8 +5,8 @@
   "author": "malczak <mateusz@malczak.info>",
   "license": "MIT",
   "devDependencies": {
-    "glob": "^7.1.4",
-    "serverless": "^1.42.3"
+    "glob": "^7.2.0",
+    "serverless": "^2.69.0"
   },
   "scripts": {
     "sls": "node_modules/.bin/sls",
